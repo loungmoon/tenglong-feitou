@@ -75,15 +75,6 @@ watch(
 )
 
 const confirm = async () => {
-  const res = await editShoeApi({
-      desk_number: Number(localForm.value.deskNumber),
-      shoe: Number(localForm.value.shoe),
-      round: Number(localForm.value.round),
-    });
-
-  console.log(res.data);
-  return;
-
   if (!localForm.value.shoe || !localForm.value.round) {
     notify.error("请输入靴号和局号");
     return;

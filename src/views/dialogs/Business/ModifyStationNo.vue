@@ -11,16 +11,14 @@
   <v-form ref="formRef">
     <v-row justify="center" dense>
       <v-col cols="10">
-        <v-select
-          v-model="oldNickname"
+        <v-text-field
+          v-model="deskNumber"
           label="原台号昵称"
-          :items="tableNames"
-          item-title="label"
-          item-value="value"
           density="compact"
           variant="outlined"
           :rules="oldNicknameRules"
           hide-details="auto"
+          readonly
         />
       </v-col>
 
@@ -46,8 +44,10 @@ import { ref, computed, watch } from "vue"
 import BaseDialog from "@/components/common/BaseDialog.vue"
 import { editDeskNickname } from "@/api/system.api"
 import { useNotify } from "@/composables/useNotifiy"
+import { useResultSettingStore } from "@/stores/resultsetting.store"
 
 const notify = useNotify()
+const store = useResultSettingStore()
 
 /* dialog model */
 const visible = defineModel({ type: Boolean })
@@ -58,14 +58,6 @@ const oldNickname = ref("")
 const newNickname = ref("")
 const formRef = ref(null)
 
-/* constants */
-const tableNames = [
-  { label: "凯旋1号", value: "凯旋1号" },
-  { label: "辉煌一台", value: "辉煌一台" },
-  { label: "辉煌二台", value: "辉煌二台" },
-  { label: "辉煌三台", value: "辉煌三台" },
-  { label: "辉煌四台", value: "辉煌四台" },
-]
 
 /* validation */
 const oldNicknameRules = [
@@ -78,10 +70,16 @@ const newNicknameRules = computed(() => [
   v => v !== oldNickname.value || "新昵称不能与原昵称相同",
 ])
 
+const deskNumber = computed({
+  get: () => store.setting.desk_number,
+  set: (val) => {
+    store.setting.desk_number = val;
+  },
+});
+
 /* reset form when dialog closes */
 watch(visible, (val) => {
   if (!val) {
-    oldNickname.value = ""
     newNickname.value = ""
     loading.value = false
   }
@@ -96,7 +94,7 @@ const handleConfirm = async () => {
   loading.value = true
   try {
     await editDeskNickname({
-      old_desk_nickname: oldNickname.value,
+      old_desk_nickname: deskNumber,
       new_desk_nickname: newNickname.value,
     })
 

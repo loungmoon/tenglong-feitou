@@ -31,3 +31,11 @@ export const deskInfo = (data) => {
 export const editDeskNickname = (data) => {
   return api.post('/system/edit_desk_nickname',data)
 }
+
+export const initDeskCoin = (data) => {
+  return api.post('/system/init_desk_coin',data)
+}
+
+export const synchronizePoints = (data) => {
+  return api.post('/system/synchronize_points',data)
+}

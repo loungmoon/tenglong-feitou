@@ -8,7 +8,7 @@
     @confirm="confirm"
   >
     <v-card-text class="text-medium-emphasis">
-      您需要将所有选手的剩余分 同步给 初始分 吗?
+      您需要将所有选手的剩余分同步给初始分吗?
     </v-card-text>
   </BaseDialog>
 </template>
@@ -16,22 +16,24 @@
 <script setup>
 import { ref } from "vue";
 import BaseDialog from "@/components/common/BaseDialog.vue";
+import { synchronizePoints } from "@/api/system.api"
+import { useNotify } from "@/composables/useNotifiy"
 
 const model = defineModel({ type: Boolean });
 const loading = ref(false);
+const notify = useNotify()
 
 const confirm = async () => {
   if (loading.value) return;
+     try {
+    const res =await synchronizePoints()
 
-  try {
-    loading.value = true;
-                   
-    // WAIT API
-    // await api.syncAllPlayerPoints()
-    console.log("Confirm")
-    model.value = false;
+    notify.success(res.msg)
+    model.value = false
+  } catch (err) {
+    notify.error(err?.message || "修改失败，请稍后再试")
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 };
 </script>

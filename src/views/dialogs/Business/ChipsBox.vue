@@ -1,7 +1,7 @@
 <template>
   <BaseDialog
     v-model="model"
-    title="初始化台上筹码"
+    title=" "
     icon="mdi-cog"
     max-width="500"
     :loading="loading"
@@ -31,12 +31,15 @@
 <script setup>
 import { ref, computed } from "vue";
 import BaseDialog from "@/components/common/BaseDialog.vue";
+import { initDeskCoin } from "@/api/system.api"
+import { useNotify } from "@/composables/useNotifiy"
 
 const model = defineModel({ type: Boolean });
 
 const form = ref(null);
 const valid = ref(false);
 const loading = ref(false);
+const notify = useNotify()
 
 const amount = ref(null);
 
@@ -57,15 +60,17 @@ const confirm = async () => {
   if (!valid) return;
 
   try {
-    loading.value = true;
+    const res = await initDeskCoin({
+      coin: amount.value,
+    })
 
-    // WAIT API
-    // await api.initChips({ amount })
-    console.log("Init chips:", amount.value);
-
-    model.value = false;
+    notify.success(res.msg)
+    amount.value = ""
+    model.value = false
+  } catch (err) {
+    notify.error(err?.message)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 };
 </script>
