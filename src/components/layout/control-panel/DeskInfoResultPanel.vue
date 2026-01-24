@@ -1,0 +1,267 @@
+<template>
+  <v-card class="mb-2" elevation="5">
+    <v-card-text>
+      <v-row align="center">
+        <v-col cols="4">
+          <v-card variant="tonal" color="error" class="text-center">
+            <div class="text-caption">台面筹码</div>
+            <div class="text-h6 font-weight-bold">-20,000</div>
+          </v-card>
+        </v-col>
+
+        <v-col cols="8" class="text-right text-primary">
+          <div>选手名称</div>
+          <div>代理名称</div>
+          <div>初始积分</div>
+        </v-col>
+      </v-row>
+
+      <v-row justify="space-around" class="text-error my-3">
+        <span>显示: 5</span>
+        <span>总赢: 0</span>
+        <span>总输: 1</span>
+      </v-row>
+
+      <div class="text-center text-purple my-5">
+        <div>非虚拟剩余分汇总: 59285</div>
+        <div>非虚拟初始分汇总: 80400</div>
+      </div>
+
+      <v-row class="d-flex justify-between" dense>
+        <v-col cols="12" md="3">
+          <v-text-field
+            v-model="form.shoe"
+            label="靴"
+            density="compact"
+            hide-details
+          />
+        </v-col>
+
+        <v-col cols="12" md="3">
+          <v-text-field
+            v-model="form.round"
+            label="局"
+            density="compact"
+            hide-details
+          />
+        </v-col>
+
+        <v-col cols="12" md="3">
+          <v-text-field
+            v-model="deskNumber"
+            label="台号"
+            density="compact"
+            hide-details
+          />
+        </v-col>
+      </v-row>
+
+      <v-row dense class="mt-4">
+        <v-col cols="4">
+          <v-btn block size="small" color="grey" @click="dlgNextShoe = true"
+            >进入下一靴</v-btn
+          >
+        </v-col>
+        <v-col cols="4">
+          <v-btn block size="small" color="grey" @click="dlgNextRound = true"
+            >开始下注</v-btn
+          >
+        </v-col>
+        <v-col cols="4">
+          <v-btn block size="small" color="grey" @click="dlgEditShoe = true"
+            >修改靴局</v-btn
+          >
+        </v-col>
+        <v-col cols="6">
+          <v-btn block size="small" color="grey" @click="dlgLock = true"
+            >锁定靴局</v-btn
+          >
+        </v-col>
+        <v-col cols="6">
+          <v-btn block size="small" color="grey" @click="dlgLast = true"
+            >最近一局</v-btn
+          >
+        </v-col>
+      </v-row>
+    </v-card-text>
+  </v-card>
+
+  <!-- Main Result -->
+  <v-card class="mb-2" elevation="5">
+    <v-card-title class="d-flex align-center justify-space-between">
+      <span>开奖区</span>
+      <v-checkbox
+        v-model="disabled"
+        label="关闭"
+        density="compact"
+        hide-details
+      />
+    </v-card-title>
+
+    <v-card-text>
+      <v-btn-toggle
+        v-model="mainResult"
+        mandatory
+        divided
+        density="comfortable"
+        class="w-100 mb-3"
+      >
+        <v-btn value="banker" color="red-lighten-4" class="flex-1"> 庄 </v-btn>
+
+        <v-btn value="tie" color="green-lighten-4" class="flex-1"> 和 </v-btn>
+
+        <v-btn value="player" color="blue-lighten-4" class="flex-1"> 闲 </v-btn>
+      </v-btn-toggle>
+
+      <v-row dense>
+        <v-col cols="6">
+          <v-checkbox
+            v-model="bankerPair"
+            label="庄对"
+            density="compact"
+            hide-details
+            color="red"
+            class="bg-red-lighten-4 rounded pa-1"
+          />
+        </v-col>
+
+        <v-col cols="6">
+          <v-checkbox
+            v-model="playerPair"
+            label="闲对"
+            density="compact"
+            hide-details
+            color="blue"
+            class="bg-blue-lighten-4 rounded pa-1"
+          />
+        </v-col>
+      </v-row>
+    </v-card-text>
+  </v-card>
+
+  <v-btn block :loading="loading" :disabled="disabled" @click="submitResult" class="mb-2">
+    确认开奖
+  </v-btn>
+
+  <NextShoe v-model="dlgNextShoe" :desk-number="deskNumber" />
+  <NextRound
+    v-model="dlgNextRound"
+    :desk-number="deskNumber"
+    @success="handleNextRound"
+  />
+
+  <EditShoe 
+  v-model="dlgEditShoe" 
+  :desk-number="deskNumber"
+  :round="form.round" 
+  :shoe="form.shoe"
+  @success="handleEditShoe"
+  />
+
+  <LockBootRound v-model="dlgLock" />
+  <LastRound v-model="dlgLast" />
+</template>
+
+<script setup>
+import { ref, computed,watch } from "vue";
+import { useResultSettingStore } from "@/stores/resultsetting.store";
+import { useNotify } from "@/composables/useNotifiy";
+import { drawLotteryApi } from "@/api/opt.api";
+import {NextShoe,NextRound,EditShoe,LockBootRound,LastRound } from "@/views/dialogs";
+
+const notify = useNotify();
+const store = useResultSettingStore();
+const dlgNextShoe = ref(false);
+const dlgNextRound = ref(false);
+const dlgEditShoe = ref(false);
+const dlgLock = ref(false);
+const dlgLast = ref(false);
+const loading = ref(false);
+const disabled = ref(false);
+
+const form = ref({
+  shoe: null,
+  round: null,
+})
+
+watch(
+  () => store.info,
+  (info) => {
+    form.value.shoe = info.shoe
+    form.value.round = info.round
+  },
+  { immediate: true, deep: true }
+)
+
+
+const mainResult = ref(null);
+const bankerPair = ref(false);
+const playerPair = ref(false);
+
+const deskNumber = computed({
+  get: () => store.setting.desk_number,
+  set: (val) => {
+    store.setting.desk_number = val;
+  },
+});
+
+const handleNextRound = (data) => {
+  form.value.round = Number(data.round);
+  // form.value.shoe = Number(data.shos);
+};
+
+const handleEditShoe = (data) => {
+  form.value.shoe = data.shoe
+  form.value.round = data.round
+}
+
+const resultCode = computed(() => {
+  let sum = 0;
+
+  if (mainResult.value === "banker") sum += 1;
+  if (mainResult.value === "player") sum += 2;
+  if (mainResult.value === "tie") sum += 4;
+  if (bankerPair.value) sum += 8;
+  if (playerPair.value) sum += 16;
+
+  return sum;
+});
+
+/* submit */
+const submitResult = async () => {
+  if (!form.value.shoe || !form.value.round) {
+    notify.error("请输入靴号和局号");
+    return;
+  }
+
+  const hasMain = !!mainResult.value;
+  const hasPair = bankerPair.value || playerPair.value;
+
+  if (!hasMain && !hasPair) {
+    notify.error("请选择庄 / 闲 / 和（或对子）");
+    return;
+  }
+
+  const payload = {
+    desk_number: Number(deskNumber.value),
+    shoe: Number(form.value.shoe),
+    round: Number(form.value.round),
+    result: resultCode.value,
+  };
+
+  loading.value = true;
+  try {
+    await drawLotteryApi(payload);
+    notify.success("开奖成功");
+
+    mainResult.value = null;
+    bankerPair.value = false;
+    playerPair.value = false;
+  } catch (err) {
+    console.error(err);
+    notify.error("接口无响应 / 请求超时");
+  } finally {
+    loading.value = false;
+  }
+};
+</script>
