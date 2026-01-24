@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import { notifyState as notify } from '@/composables/useNotifiy'
@@ -23,4 +23,8 @@ const route = useRoute()
 const layout = computed(() =>
   route.meta.layout === 'default' ? DefaultLayout : 'div'
 )
+
+onMounted(() => {
+  console.log('Mounted');
+})
 </script>
