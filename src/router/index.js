@@ -13,8 +13,8 @@ const routes = [
     meta: { guest: true },
   },
   {
-    path: '/dashboard',
-    component: () => import('@/views/Dashboard.vue'),
+    path: '/layout',
+    component: () => import('@/layouts/DefaultLayout.vue'),
     meta: { layout: 'default',requiresAuth: true}
   },
 ]
@@ -30,7 +30,7 @@ router.beforeEach((to,from,next)=>{
   if (to.meta.requiresAuth && !token) {
     next('/login')
   } else if (to.meta.guest && token) {
-    next('/dashboard')
+    next('/layout')
   } else {
     next()
   }

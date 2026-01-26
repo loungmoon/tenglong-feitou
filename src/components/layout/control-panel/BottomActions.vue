@@ -4,7 +4,7 @@
     <v-col cols="6">
       <v-btn
         block
-        color="pink-lighten-4"
+        color="#d17b4d"
         class="mb-2"
         @click="dlgImport = true"
       >
@@ -14,7 +14,7 @@
       <v-btn
         block
         height="80"
-        color="pink-lighten-4"
+        color="#d17b4d"
         class="text-caption font-weight-medium"
         @click="dlgLottery = true"
       >
@@ -26,7 +26,7 @@
     <v-col cols="6">
       <v-btn
         block
-        color="pink-lighten-4"
+        color="#d17b4d"
         class="mb-2"
         @click="dlgBetShot = true"
       >
@@ -35,7 +35,7 @@
 
       <v-btn
         block
-        color="pink-lighten-4"
+        color="#d17b4d"
         class="mb-2"
         @click="dlgScoreShot = true"
       >
@@ -44,7 +44,7 @@
 
       <v-btn
         block
-        color="pink-lighten-4"
+        color="#d17b4d"
         @click="dlgNextRound = true"
       >
         进入下局

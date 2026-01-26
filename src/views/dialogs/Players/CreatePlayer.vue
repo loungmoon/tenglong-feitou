@@ -6,55 +6,66 @@
     :loading="loading"
     @confirm="confirm"
   >
-    <v-text-field
-      v-model="name"
-      label="选手名称"
-      :rules="rules"
-      variant="outlined"
-      density="comfortable"
-    />
+    <v-form ref="formRef">
+      <v-text-field
+        v-model="name"
+        label="选手名称"
+        variant="outlined"
+        density="comfortable"
+        :rules="rules"
+      />
 
-    <v-checkbox
-      v-model="is_virtual"
-      label="是否虚拟"
-      color="success"
-      density="compact"
-    />
+      <v-checkbox
+        v-model="isVirtual"
+        label="是否虚拟"
+        color="success"
+        density="compact"
+      />
+    </v-form>
   </BaseDialog>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import BaseDialog from "@/components/common/BaseDialog.vue";
 import { usePlayerStore } from "@/stores/player.store";
 import { useNotify } from "@/composables/useNotifiy";
 
 const model = defineModel({ type: Boolean });
 
-const notify = useNotify();
 const store = usePlayerStore();
+const notify = useNotify();
 
+const formRef = ref(null);
 const name = ref("");
-const is_virtual = ref(false); //（0 不是 1 是）
+const isVirtual = ref(false);
 const loading = ref(false);
 
-const rules = [(v) => !!v || "选手名称不能为空"];
+const rules = [(v) => !!v?.trim() || "选手名称不能为空"];
+
+watch(model, (open) => {
+  if (open) {
+    name.value = "";
+    isVirtual.value = false;
+    formRef.value?.resetValidation();
+  }
+});
 
 const confirm = async () => {
-  if (!name.value) return;
+  const { valid } = await formRef.value.validate();
+  if (!valid) return;
 
   loading.value = true;
   try {
     await store.createPlayer({
-      name: name.value,
-      is_virtual: is_virtual.value ? 1 : 0,
+      name: name.value.trim(),
+      is_virtual: isVirtual.value ? 1 : 0,
     });
+
     notify.success("新增选手成功");
-     name.value = null,
-     is_virtual.value = false
     model.value = false;
   } catch (err) {
-    notify.error(err);
+    notify.error(err?.response?.data?.msg || "新增选手失败");
   } finally {
     loading.value = false;
   }

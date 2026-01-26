@@ -2,29 +2,16 @@
   <v-card class="mb-2" elevation="5">
     <v-card-text>
       <v-row dense>
-
-        <!-- PLAYER -->
         <v-col cols="12" md="7">
-          <v-alert type="error" variant="text" density="compact" class="mb-2 border">
-            <v-icon size="small">mdi-star-off-outline</v-icon>号为隐藏选手
+          <v-alert
+            type="error"
+            variant="text"
+            density="compact"
+            class="mb-2 border"
+          >
+            <v-icon size="small">mdi-star-off-outline</v-icon>
+            号为隐藏选手
           </v-alert>
-          <!-- <v-row dense>
-            <v-col cols="8">
-              <v-select
-                v-model="selectedPlayer"
-                :items="players"
-                item-title="playername"
-                item-value="Id"
-                label="选手"
-                density="compact"
-                hide-details
-              />
-            </v-col>
-
-            <v-col cols="4">
-              <v-btn block color="grey">搜</v-btn>
-            </v-col>
-          </v-row> -->
 
           <v-sheet
             border
@@ -33,31 +20,36 @@
             height="250"
           >
             <v-list density="compact">
-                <v-list-item 
-                  v-for="p in playerStore.list" :key="p.id" 
-                  @click="selectedPlayer = p.playername"
-                  color="primary"
-                  :active="selectedPlayer == p.playername"
-                >
-                  <v-list-item-title>{{p.playername}}</v-list-item-title>
-                  <template v-slot:prepend>
-                    <v-icon :icon="p.is_hide ? 'mdi-star-off-outline' : 'mdi-star'"></v-icon>
-                  </template>
-                </v-list-item>
+              <v-list-item
+                v-for="p in playerStore.list"
+                :key="p.playername"
+                color="primary"
+                :active="playerStore.selected?.playername === p.playername"
+                @click="selectPlayer(p.playername)"
+              >
+                <template #prepend>
+                  <v-icon
+                    :icon="p.is_hide ? 'mdi-star-off-outline' : 'mdi-star'"
+                  />
+                </template>
+
+                <v-list-item-title>
+                  {{ p.playername }}
+                </v-list-item-title>
+              </v-list-item>
             </v-list>
           </v-sheet>
         </v-col>
 
-         <!-- ACTION BUTTONS -->
         <v-col cols="12" md="5" class="mt-11">
           <v-btn
             v-for="btn in actions"
             :key="btn.action"
             block
-            color="warning"
+            color="#d17b4d"
             class="mb-2"
             :disabled="btn.needPlayer && !hasSelectedPlayer"
-            @click="openDialog(btn.action)"
+            @click="handleAction(btn.action)"
           >
             {{ btn.label }}
           </v-btn>
@@ -75,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted,nextTick } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { usePlayerStore } from "@/stores/player.store";
 
 import {
@@ -87,17 +79,14 @@ import {
 } from "@/views/dialogs";
 
 const playerStore = usePlayerStore();
+
+const dlgCreate = ref(false);
+const dlgUpdate = ref(false);
+const dlgDelete = ref(false);
+const dlgTop = ref(false);
+const dlgHide = ref(false);
+
 const hasSelectedPlayer = computed(() => !!playerStore.selected);
-
-onMounted(() => {
-  playerStore.fetchPlayers();
-});
-const players = computed(() => playerStore.nameList);
-
-const selectedPlayer = computed({
-  get: () => playerStore.selected?.playername ?? null,
-  set: (v) => playerStore.setSelectedByName(v),
-});
 
 const actions = [
   { label: "刷新选手", action: "refresh", needPlayer: false },
@@ -108,20 +97,40 @@ const actions = [
   { label: "隐藏选手", action: "hide", needPlayer: true },
 ];
 
-const dlgCreate = ref(false);
-const dlgUpdate = ref(false);
-const dlgDelete = ref(false);
-const dlgTop = ref(false);
-const dlgHide = ref(false);
+onMounted(() => {
+  playerStore.fetchPlayers();
+});
 
-const openDialog = async (action) => {
-  if (action === "refresh") {
-    playerStore.selected = null;
+const selectPlayer = (name) => {
+  playerStore.setSelectedByName(name);
+};
+
+const handleAction = async (action) => {
+  switch (action) {
+    case "refresh":
+      await playerStore.fetchPlayers(true);
+      playerStore.selected = null
+      break;
+
+    case "create":
+      dlgCreate.value = true;
+      break;
+
+    case "update":
+      dlgUpdate.value = true;
+      break;
+
+    case "delete":
+      dlgDelete.value = true;
+      break;
+
+    case "top":
+      dlgTop.value = true;
+      break;
+
+    case "hide":
+      dlgHide.value = true;
+      break;
   }
-  if (action === "create") dlgCreate.value = true;
-  if (action === "update") dlgUpdate.value = true;
-  if (action === "delete") dlgDelete.value = true;
-  if (action === "top") dlgTop.value = true;
-  if (action === "hide") dlgHide.value = true;
 };
 </script>

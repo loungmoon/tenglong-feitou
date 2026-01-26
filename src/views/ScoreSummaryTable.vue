@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card elevation="0">
     <div ref="betScoreRef">
     <v-data-table
       :headers="headers"

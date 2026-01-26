@@ -20,12 +20,12 @@ export const setParameter = (data) =>{
 return api.post(`/system/parameter_setup`,data);
 }
 
-export const setPersonalParameter = (data) =>{
-return api.post(`/system/personal_parameter_setup`,data);
+export const getPersonalParameter = (data) =>{
+return api.post(`/system/get_personal_parameter`,data);
 }
 
-export const deskInfo = (data) => {
-  return api.post('/data_query/get_desk_info',data);
+export const setPersonalParameter = (data) =>{
+return api.post(`/system/personal_parameter_setup`,data);
 }
 
 export const editDeskNickname = (data) => {
@@ -38,4 +38,8 @@ export const initDeskCoin = (data) => {
 
 export const synchronizePoints = (data) => {
   return api.post('/system/synchronize_points',data)
+}
+
+export const deskInfo = (data) => {
+  return api.post('/data_query/get_desk_info',data);
 }

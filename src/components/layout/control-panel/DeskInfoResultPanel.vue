@@ -136,12 +136,13 @@
           />
         </v-col>
       </v-row>
+      <v-btn block :loading="loading" :disabled="disabled" size="large" color="primary" @click="submitResult" class="mt-4">
+        确认开奖
+      </v-btn>
     </v-card-text>
   </v-card>
 
-  <v-btn block :loading="loading" :disabled="disabled" @click="submitResult" class="mb-2">
-    确认开奖
-  </v-btn>
+
 
   <NextShoe v-model="dlgNextShoe" :desk-number="deskNumber" />
   <NextRound

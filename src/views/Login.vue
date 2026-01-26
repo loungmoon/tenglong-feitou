@@ -5,7 +5,7 @@
         <v-card
           class="pa-10"
           elevation="12"
-          :max-width="450"
+          max-width="450"
           width="100%"
           rounded="lg"
         >
@@ -17,7 +17,7 @@
             登录你的账号
           </v-card-subtitle>
 
-          <v-form v-model="valid">
+          <v-form v-model="valid" @submit.prevent="login">
             <v-text-field
               v-model="username"
               label="用户名称"
@@ -30,7 +30,7 @@
 
             <v-text-field
               v-model="password"
-              label="用户账号"
+              label="用户密码"
               :type="showPassword ? 'text' : 'password'"
               prepend-inner-icon="mdi-lock"
               :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -48,67 +48,74 @@
               rounded="lg"
               :loading="loading"
               :disabled="!valid || loading"
-              @click="login"
+              type="submit"
             >
               登录
             </v-btn>
           </v-form>
         </v-card>
-
       </v-container>
     </v-main>
   </v-app>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { loginApi } from "@/api/auth.api";
-import { useNotify } from "@/composables/useNotifiy";
+import { ref } from "vue"
+import { useRouter } from "vue-router"
+import { loginApi } from "@/api/auth.api"
+import { setToken } from "@/utils/request"
+import { useNotify } from "@/composables/useNotifiy"
 
-const notify = useNotify();
+const router = useRouter()
+const notify = useNotify()
 
-const router = useRouter();
-
-const valid = ref(false);
-const username = ref("");
-const password = ref("");
-const showPassword = ref(false);
-const loading = ref(false);
-
+const valid = ref(false)
+const username = ref("")
+const password = ref("")
+const showPassword = ref(false)
+const loading = ref(false)
 
 const usernameRules = [
-  (v) => !!v || "请输入用户名",
-  (v) => v.length >= 3 || "用户名至少 3 位",
-  (v) => v.length <= 20 || "用户名不能超过 20 位",
-  (v) => /^[a-zA-Z0-9_]+$/.test(v) || "用户名只能包含字母、数字或下划线",
-];
+  v => !!v || "请输入用户名",
+  v => v.length >= 3 || "用户名至少 3 位",
+  v => v.length <= 20 || "用户名不能超过 20 位",
+  v => /^[a-zA-Z0-9_]+$/.test(v) || "用户名只能包含字母、数字或下划线",
+]
 
 const passwordRules = [
-  (v) => !!v || "请输入密码",
-  (v) => v.length >= 6 || "密码至少 6 位",
-];
+  v => !!v || "请输入密码",
+  v => v.length >= 6 || "密码至少 6 位",
+]
 
 const login = async () => {
-  if (!valid.value) return;
+  if (!valid.value || loading.value) return
 
-  loading.value = true;
+  loading.value = true
   try {
     const res = await loginApi({
       username: username.value,
       password: password.value,
-    });
+    })
 
-    notify.success(res.msg);
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 800);
+    if (!res.data || !res.data.token) {
+      throw new Error(res.msg || "登录失败")
+    }
+
+    setToken(res.data.token)
+
+    notify.success(res.msg || "登录成功")
+    router.replace("/layout")
   } catch (err) {
-     notify.error(err);
+    notify.error(
+      err?.response?.data?.msg ||
+      err?.message ||
+      "账号或密码错误"
+    )
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
+
 </script>
 
 <style scoped>

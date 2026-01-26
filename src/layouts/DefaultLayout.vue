@@ -6,7 +6,6 @@
       :summary="summary"
       @action="dialog.open"
     />
-     <!-- <slot /> -->
 
      <v-main class="main-scroll">
       <v-container fluid class="pa-2">
@@ -14,7 +13,7 @@
 
           <!-- LEFT: Main -->
           <v-col cols="12" md="7" lg="9">
-            <router-view />
+            <Dashbord />
           </v-col>
 
           <!-- RIGHT: CONTROL PANEL -->
@@ -32,8 +31,9 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted } from "vue";
 import AppNavbar from "@/components/layout/AppNavbar.vue";
+import Dashbord from "@/views/Dashboard.vue"
 import AppControlPanel from "@/components/layout/control-panel/ControlPanel.vue";
 import DialogContainer from "@/components/dialogs/DialogContainer.vue";
 import { useDialogStore } from "@/stores/dialog.store";

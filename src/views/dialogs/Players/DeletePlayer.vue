@@ -6,6 +6,7 @@
     maxWidth="360"
     confirmText="删除"
     confirmColor="error"
+    :loading="loading"
     @confirm="confirm"
   >
     <div class="text-body-2">
@@ -17,32 +18,47 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'    
-import BaseDialog from '@/components/common/BaseDialog.vue'
+import { ref, watch } from "vue";
+import BaseDialog from "@/components/common/BaseDialog.vue";
 import { usePlayerStore } from "@/stores/player.store";
 import { useNotify } from "@/composables/useNotifiy";
 
-const notify = useNotify();
-const store = usePlayerStore();
+const model = defineModel(Boolean);
 
-const model = defineModel({ type: Boolean })
-const props = defineProps({ player: {
-  type: Object,
-  default: null
-} })
-const loading = ref(false)
+const props = defineProps({
+  player: {
+    type: Object,
+    default: null,
+  },
+});
+
+const store = usePlayerStore();
+const notify = useNotify();
+
+const loading = ref(false);
+
+/* reset state when dialog opens */
+watch(model, (open) => {
+  if (open) {
+    loading.value = false;
+  }
+});
 
 const confirm = async () => {
-  if (!props.player) return;
-  loading.value = true
+  if (!props.player || loading.value) return;
+
+  loading.value = true;
   try {
-    await store.deletePlayer(props.player.playername)
-    notify.success("删除成功")
-    model.value = false
-  } catch (e) {
-    notify.error(e)
+    await store.deletePlayer(props.player.playername);
+
+    notify.success("删除成功");
+    model.value = false;
+  } catch (err) {
+    notify.error(
+      err?.response?.data?.msg || "删除失败"
+    );
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 </script>

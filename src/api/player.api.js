@@ -9,7 +9,7 @@ export const createPlayerApi = (data) =>{
 }
   
 export const updatePlayerApi = (data) =>{
- return  api.post(`/player/edit_player`, data);
+ return api.post(`/player/edit_player`, data);
 }
 
 export const deletePlayerApi = (data) =>{
@@ -22,8 +22,4 @@ return api.post(`/player/top_player`,data);
 
 export const hidePlayerApi = (data) =>{
 return api.post(`/player/hide_player`,data);
-}
-
-export const deskInfo = (data) => {
-  return api.post('/data_query/get_desk_info',data);
 }
