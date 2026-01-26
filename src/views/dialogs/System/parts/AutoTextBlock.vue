@@ -1,46 +1,54 @@
 <template>
+  <v-checkbox
+    :model-value="auto"
+    label="自动发送文本"
+    density="compact"
+    @update:model-value="$emit('update:auto', $event)"
+  />
 
-    <v-checkbox
-      v-model="form[enableKey]"
-      :label="`自动发送文本 ${index}`"
+  <div class="d-flex align-center gap-2 mb-2">
+    <v-text-field
+      type="number"
       density="compact"
-    />
-
-    <div class="d-flex align-center gap-2 mb-2">
-      <v-text-field
-        v-model.number="form[secondKey]"
-        density="compact"
-        variant="outlined"
-        hide-details
-        style="max-width: 80px"
-        :rules="form[enableKey] ? [positive] : []"
-      />
-      <span class="text-caption">秒后发送</span>
-    </div>
-
-    <v-textarea
-      v-model="form[textKey]"
       variant="outlined"
-      auto-grow
-      rows="3"
-      :rules="form[enableKey] ? [required] : []"
-      label="发送内容"
+      hide-details
+      style="max-width: 80px"
+      :disabled="!auto"
+      :model-value="seconds"
+      @update:model-value="$emit('update:seconds', Number($event))"
     />
-  
+    <span class="text-caption">秒后发送</span>
+  </div>
+
+  <v-textarea
+    variant="outlined"
+    auto-grow
+    rows="3"
+    label="发送内容"
+    :model-value="text"
+    @update:model-value="$emit('update:text', $event)"
+  />
 </template>
 
 <script setup>
-const props = defineProps({
-  modelValue: Object,
-  index: Number,
-});
+defineProps({
+  auto: {
+    type: Boolean,
+    default: false,
+  },
+  seconds: {
+    type: Number,
+    default: 0,
+  },
+  text: {
+    type: String,
+    default: "",
+  },
+})
 
-const form = props.modelValue;
-
-const enableKey = `auto_send_text${props.index}`;
-const secondKey = `second_send_text${props.index}`;
-const textKey = `text${props.index}_after_betreport`;
-
-const required = v => !!v || "必填";
-const positive = v => v > 0 || "必须大于 0";
+defineEmits([
+  "update:auto",
+  "update:seconds",
+  "update:text",
+])
 </script>

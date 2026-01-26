@@ -5,50 +5,35 @@
     icon="mdi-cog"
     max-width="900"
     :loading="loading"
-    confirmBtn="保存设置"
-    :confirm-disabled="!isValid"
+    confirm-btn="保存设置"
     @confirm="save"
   >
     <v-form ref="formRef" v-model="isValid">
       <div class="dialog-body">
+        <!-- Start / Stop Images -->
         <v-row dense>
-          <ImageUploader
-            label="开始图片"
-            v-model="form.img_start"
-            :rules="[required]"
-          />
-          <ImageUploader
-            label="截止图片"
-            v-model="form.img_stop"
-            :rules="[required]"
-          />
+          <ImageUploader v-model="form.img_start" label="开始图片" />
+          <ImageUploader v-model="form.img_stop" label="截止图片" />
         </v-row>
+
+        <!-- Base Info -->
         <v-row dense>
           <v-col cols="12" md="2">
             <v-checkbox v-model="form.active" label="是否启用" />
           </v-col>
 
           <v-col cols="12" md="2">
-            <v-text-field
-              v-model="form.group_nickname"
-              label="开工群昵称"
-              :rules="[required]"
-            />
+            <v-text-field v-model="form.group_nickname" label="开工群昵称" />
           </v-col>
 
           <v-col cols="12" md="2">
-            <v-text-field
-              v-model="form.account"
-              label="账号"
-              :rules="[required]"
-            />
+            <v-text-field v-model="form.account" label="账号" />
           </v-col>
 
           <v-col cols="12" md="3">
             <v-text-field
               v-model="form.pull_table_nickname"
               label="拉表机器人昵称"
-              :rules="[required]"
             />
           </v-col>
 
@@ -56,36 +41,52 @@
             <v-text-field
               v-model="form.report_bet_groups_nickname"
               label="报注群昵称"
-              :rules="[required]"
             />
           </v-col>
         </v-row>
+
+        <!-- Toggles -->
         <v-row dense>
-          <v-col cols="12" md="3" v-for="item in autoToggles" :key="item.key">
+          <v-col v-for="item in autoToggles" :key="item.key" cols="12" md="3">
             <v-checkbox v-model="form[item.key]" :label="item.label" />
           </v-col>
         </v-row>
 
-        <SettingsSection title="以下图片发送 “开始图片” 后多少秒发出">
+        <!-- Auto Images After Start -->
+        <SettingsSection title="以下图片发送“开始图片”后多少秒发出">
           <v-row dense>
             <v-col v-for="i in 3" :key="i" cols="12" md="4">
-              <AutoImageBlock :index="i" type="start" v-model="form" />
+              <AutoImageBlock
+                v-model:auto="form[`auto_send_img${i}_after_start`]"
+                v-model:seconds="form[`second_send_img${i}_after_start`]"
+                v-model:image="form[`img${i}_after_start`]"
+              />
             </v-col>
           </v-row>
         </SettingsSection>
 
-        <SettingsSection title="以下文本发送 “投注表” 后多少秒发出">
+        <!-- Auto Text -->
+        <SettingsSection title="以下文本发送“投注表”后多少秒发出">
           <v-row dense>
             <v-col v-for="i in 3" :key="i" cols="12" md="4">
-              <AutoTextBlock :index="i" v-model="form" />
+              <AutoTextBlock
+                v-model:auto="form[`auto_send_text${i}`]"
+                v-model:seconds="form[`second_send_text${i}`]"
+                v-model:text="form[`text${i}_after_betreport`]"
+              />
             </v-col>
           </v-row>
         </SettingsSection>
 
-        <SettingsSection title="以下图片发送 “投发表” 后多少秒发出">
+        <!-- Auto Images After Bet Report -->
+        <SettingsSection title="以下图片发送“投发表”后多少秒发出">
           <v-row dense>
             <v-col v-for="i in 3" :key="i" cols="12" md="4">
-              <AutoImageBlock :index="i" type="betreport" v-model="form" />
+              <AutoImageBlock
+                v-model:auto="form[`auto_send_img${i}_after_betreport`]"
+                v-model:seconds="form[`second_send_img${i}_after_betreport`]"
+                v-model:image="form[`img${i}_after_betreport`]"
+              />
             </v-col>
           </v-row>
         </SettingsSection>
@@ -93,26 +94,26 @@
     </v-form>
   </BaseDialog>
 </template>
+
 <script setup>
-import { ref, reactive, computed, watch } from "vue";
+import { ref, reactive, watch } from "vue";
+import { useGroupPullStore } from "@/stores/group.store";
+import { useNotify } from "@/composables/useNotifiy";
+
 import BaseDialog from "@/components/common/BaseDialog.vue";
 import SettingsSection from "./parts/SettingsSection.vue";
 import ImageUploader from "./parts/ImageUploader.vue";
 import AutoImageBlock from "./parts/AutoImageBlock.vue";
 import AutoTextBlock from "./parts/AutoTextBlock.vue";
-import { useGroupPullStore } from "@/stores/group.store";
-import { useNotify } from "@/composables/useNotifiy";
 
 const model = defineModel(Boolean);
-const loading = ref(false);
-const formRef = ref(null);
-const isValid = ref(false);
 const store = useGroupPullStore();
 const notify = useNotify();
 
-const required = (v) => !!v || "必填";
+const loading = ref(false);
+const formRef = ref(null);
+const isValid = ref(false);
 
-/* ---------- Form ---------- */
 const form = reactive({
   img_start: "",
   img_stop: "",
@@ -128,7 +129,7 @@ const form = reactive({
   auto_send_settlement_table: false,
   auto_send_start_img: false,
 
-  // 开始后图片
+  // start images
   auto_send_img1_after_start: false,
   auto_send_img2_after_start: false,
   auto_send_img3_after_start: false,
@@ -139,7 +140,7 @@ const form = reactive({
   img2_after_start: "",
   img3_after_start: "",
 
-  // 文本
+  // text
   auto_send_text1: false,
   auto_send_text2: false,
   auto_send_text3: false,
@@ -150,7 +151,7 @@ const form = reactive({
   text2_after_betreport: "",
   text3_after_betreport: "",
 
-  // 投注后图片
+  // bet report images
   auto_send_img1_after_betreport: false,
   auto_send_img2_after_betreport: false,
   auto_send_img3_after_betreport: false,
@@ -162,14 +163,16 @@ const form = reactive({
   img3_after_betreport: "",
 });
 
-watch(model, async(open)=> {
+watch(model, async (open) => {
   if (!open) return;
 
+  loading.value = true;
   await store.fetchSetting();
-  Object.assign(form, store.setting);
-  formRef.value?.resetValidation();
 
-})
+  Object.assign(form, store.setting);
+
+  loading.value = false;
+});
 
 const save = async () => {
   const result = await formRef.value?.validate();
@@ -177,14 +180,13 @@ const save = async () => {
 
   try {
     await store.saveSetting(form);
-    notify.success("修改成功");
+    notify.success("保存成功");
     model.value = false;
   } catch (err) {
-    notify.error("保存失败");
+    notify.error(err || "保存失败");
   }
 };
 
-/* ---------- UI ---------- */
 const autoToggles = [
   { key: "auto_send_bet_report", label: "自动发送投注报表" },
   { key: "auto_send_road", label: "自动发送路单" },
@@ -192,9 +194,3 @@ const autoToggles = [
   { key: "auto_send_start_img", label: "自动发送开始图片" },
 ];
 </script>
-<style scoped>
-.dialog-body {
-  max-height: calc(100vh - 220px);
-  overflow-y: auto;
-}
-</style>

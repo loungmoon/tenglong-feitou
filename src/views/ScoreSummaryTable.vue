@@ -1,5 +1,6 @@
 <template>
   <v-card>
+    <div ref="betScoreRef">
     <v-data-table
       :headers="headers"
       :items="items"
@@ -26,7 +27,9 @@
         </span>
       </template>
     </v-data-table>
+    </div>
   </v-card>
+  
 </template>
 
 <script setup>
@@ -35,9 +38,11 @@ import { getPlayerScoreDataApi } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
 import { usePlayerStore } from "../stores/player.store";
 import { useResultSettingStore } from "../stores/resultsetting.store";
+import { useUiStore } from "@/stores/ui.store";
 
 const playStore = usePlayerStore();
 const resultStore = useResultSettingStore();
+const uiStore = useUiStore();
 
 const users = computed(() => playStore.userList);
 
@@ -56,6 +61,7 @@ const headers = [
 const items = ref([]);
 const loading = ref(false);
 const notify = useNotify();
+const betScoreRef = ref("");
 
 const fetchScoreData = async () => {
   loading.value = true;
@@ -132,6 +138,8 @@ onMounted(() => {
             if (retry == 0) clearInterval(interval);
         }
     }, 1000);
+
+    uiStore.scoreTableEl = betScoreRef.value
 });
 
 /* ----------------------------

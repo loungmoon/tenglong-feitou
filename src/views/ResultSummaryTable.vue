@@ -1,31 +1,33 @@
 <template>
   <v-card>
-    <v-data-table
-      :headers="headers"
-      :items="items"
-      :loading="loading"
-      density="compact"
-      hide-default-footer
-      disable-sort
-      class="desktop-table"
-      item-key="name"
-      :row-props="rowProps"
-    >
-      <!-- Loading -->
-      <template #loading>
-        <v-skeleton-loader type="table-row@7" />
-      </template>
+    <div ref="betTableRef">
+      <v-data-table
+        :headers="headers"
+        :items="items"
+        :loading="loading"
+        density="compact"
+        hide-default-footer
+        disable-sort
+        class="desktop-table"
+        item-key="name"
+        :row-props="rowProps"
+      >
+        <!-- Loading -->
+        <template #loading>
+          <v-skeleton-loader type="table-row@7" />
+        </template>
 
-      <!-- Name -->
-      <template #item.name="{ item }">
-        <strong v-if="item.name === '合计'">
-          {{ item.name }}
-        </strong>
-        <span v-else>
-          {{ item.name }}
-        </span>
-      </template>
-    </v-data-table>
+        <!-- Name -->
+        <template #item.name="{ item }">
+          <strong v-if="item.name === '合计'">
+            {{ item.name }}
+          </strong>
+          <span v-else>
+            {{ item.name }}
+          </span>
+        </template>
+      </v-data-table>
+    </div>
   </v-card>
 </template>
 
@@ -34,6 +36,7 @@ import { ref, onMounted, computed, watch } from "vue";
 import { getPlayerBetDataApi } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
 import { usePlayerStore } from "@/stores/player.store";
+import { useUiStore } from "@/stores/ui.store";
 
 const store = usePlayerStore();
 const users = computed(() => store.userList);
@@ -52,6 +55,9 @@ const headers = [
 const items = ref([]);
 const loading = ref(false);
 const notify = useNotify();
+const betTableRef = ref(null);
+
+const uiStore = useUiStore()
 
 const fetchTableData = async () => {
   loading.value = true;
@@ -142,6 +148,8 @@ onMounted(() => {
       if (retry == 0) clearInterval(interval);
     }
   }, 1000);
+
+   uiStore.betTableEl = betTableRef.value
 });
 
 /* ----------------------------

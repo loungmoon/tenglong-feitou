@@ -6,30 +6,31 @@ import {
 
 export const useGroupPullStore = defineStore("groupPull", {
   state: () => ({
-    loaded: false,
     loading: false,
     setting: {},
   }),
 
   actions: {
     async fetchSetting() {
-      if (this.loaded) return;
-
       this.loading = true;
       try {
-        const { data } = await getGroupPullDataApi();
+        const res = await getGroupPullDataApi();
 
-        this.setting = {
-          ...data,
-          // normalize backend → frontend
-          active: Boolean(data.active),
-          auto_send_bet_report: Boolean(data.auto_send_bet_report),
-          auto_send_road: Boolean(data.auto_send_road),
-          auto_send_settlement_table: Boolean(data.auto_send_settlement_table),
-          auto_send_start_img: Boolean(data.auto_send_start_img),
-        };
+        // 🔥 MUST extract first item
+        const row = res.data?.[0] ?? {};
 
-        this.loaded = true;
+        // 🔥 normalize ALL booleans
+        const normalized = {};
+
+        Object.keys(row).forEach((key) => {
+          if (key.startsWith("auto_send_") || key === "active") {
+            normalized[key] = Boolean(row[key]);
+          } else {
+            normalized[key] = row[key];
+          }
+        });
+
+        this.setting = normalized;
       } finally {
         this.loading = false;
       }
@@ -38,16 +39,16 @@ export const useGroupPullStore = defineStore("groupPull", {
     async saveSetting(form) {
       this.loading = true;
       try {
-        const payload = Object.fromEntries(
-          Object.entries(form).map(([k, v]) => [
-            k,
-            typeof v === "boolean" ? (v ? 1 : 0) : v,
-          ]),
-        );
+        // 🔥 convert boolean → 0/1 for backend
+        const payload = {};
+
+        Object.entries(form).forEach(([k, v]) => {
+          payload[k] = typeof v === "boolean" ? (v ? 1 : 0) : v;
+        });
 
         await setGroupPullDataApi(payload);
 
-        // sync store
+        // 🔥 keep store in FRONTEND format
         this.setting = { ...form };
       } finally {
         this.loading = false;

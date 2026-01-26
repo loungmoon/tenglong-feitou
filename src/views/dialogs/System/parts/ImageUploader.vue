@@ -1,42 +1,41 @@
 <template>
   <v-col cols="12" md="6">
-    <v-card
-      variant="outlined"
-      class="image-box"
-      height=auto
-      @click="selectFile"
-    >
-      <!-- Image -->
-      <template v-if="modelValue">
-        <v-img :src="modelValue" height="140" cover />
-      </template>
+    <div class="text-caption mb-1">{{ label }}</div>
 
-      <!-- Empty -->
-      <template v-else>
-        <div class="empty-box">
-          <v-icon size="48">mdi-image-plus</v-icon>
-          <div class="text-caption mt-2">{{ label }}</div>
+    <v-card
+      class="image-box"
+      height="160"
+      variant="outlined"
+      @click="openFile"
+    >
+      <template v-if="modelValue">
+        <div class="img-wrapper">
+          <v-img :src="modelValue" height="160" cover />
+
+          <v-btn
+            icon="mdi-close"
+            size="x-small"
+            class="delete-btn"
+            @click.stop="removeImage"
+          />
         </div>
       </template>
 
-      <!-- Delete -->
-      <v-btn
-        v-if="modelValue"
-        icon="mdi-close"
-        size="x-small"
-        class="delete-btn"
-        @click.stop="clear"
-      />
-
-      <!-- Hidden input -->
-      <input
-        ref="inputRef"
-        type="file"
-        accept="image/*"
-        hidden
-        @change="onFileChange"
-      />
+      <template v-else>
+        <div class="empty-box">
+          <v-icon size="36">mdi-image-plus</v-icon>
+          <div class="text-caption">点击上传图片</div>
+        </div>
+      </template>
     </v-card>
+
+    <input
+      ref="inputRef"
+      type="file"
+      hidden
+      accept="image/*"
+      @change="onFileChange"
+    />
   </v-col>
 </template>
 
@@ -45,55 +44,36 @@ import { ref } from "vue";
 import { uploadImageApi } from "@/api/opt.api";
 import { useNotify } from "@/composables/useNotifiy";
 
-/* ---------- Props ---------- */
-const props = defineProps({
-  modelValue: String,
-  label: {
-    type: String,
-    default: "Upload image",
-  },
-});
+const modelValue = defineModel(String);
+defineProps({ label: String });
 
-/* ---------- Emits ---------- */
-const emit = defineEmits(["update:modelValue"]);
-
-/* ---------- State ---------- */
 const inputRef = ref(null);
-const loading = ref(false);
 const notify = useNotify();
 
-/* ---------- Open file ---------- */
-const selectFile = () => {
-  inputRef.value?.click();
-};
+const openFile = () => inputRef.value.click();
 
-/* ---------- Upload ---------- */
 const onFileChange = async (e) => {
-  const file = e.target.files?.[0];
+  const file = e.target.files[0];
   if (!file) return;
 
-  const formData = new FormData();
-  formData.append("image", file);
+  const fd = new FormData();
+  fd.append("file", file);
 
-  loading.value = true;
   try {
-    const res = await uploadImageApi(formData);
-    emit("update:modelValue", res.data.url);
-    notify.success("Image uploaded");
+    const res = await uploadImageApi(fd);
+    modelValue.value = res.data.data.url;
+    notify.success("图片上传成功");
   } catch {
-    notify.error("Upload failed");
+    notify.error("上传失败");
   } finally {
-    loading.value = false;
+    inputRef.value.value = "";
   }
 };
 
-/* ---------- Clear ---------- */
-const clear = () => {
-  emit("update:modelValue", "");
-  if (inputRef.value) inputRef.value.value = "";
+const removeImage = () => {
+  modelValue.value = "";
 };
 </script>
-
 
 <style scoped>
 .image-box {
@@ -101,17 +81,24 @@ const clear = () => {
   cursor: pointer;
 }
 
+.img-wrapper {
+  position: relative;
+  height: 160px;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 4px;
+  inset-inline-end: 4px; /* RTL-safe */
+  z-index: 10;
+}
+
 .empty-box {
-  height: 100%;
+  height: 160px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.delete-btn {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-}
 </style>

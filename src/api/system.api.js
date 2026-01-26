@@ -5,7 +5,7 @@ export const setGroupPullDataApi = (data) =>{
 }
 
 export const getGroupPullDataApi = (data) =>{
- return  api.post(`/system/get_group_pull_data`, data);
+ return  api.post(`/system/get_group_pull_data_setup`, data);
 }
 
 export const setLotteryResultApi = (data) => {
