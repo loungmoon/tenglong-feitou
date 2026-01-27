@@ -96,7 +96,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { useGroupPullStore } from "@/stores/group.store";
 import { useNotify } from "@/composables/useNotifiy";
 
@@ -114,64 +114,15 @@ const loading = ref(false);
 const formRef = ref(null);
 const isValid = ref(false);
 
-const form = reactive({
-  img_start: "",
-  img_stop: "",
-
-  active: false,
-  group_nickname: "",
-  account: "",
-  pull_table_nickname: "",
-  report_bet_groups_nickname: "",
-
-  auto_send_bet_report: false,
-  auto_send_road: false,
-  auto_send_settlement_table: false,
-  auto_send_start_img: false,
-
-  // start images
-  auto_send_img1_after_start: false,
-  auto_send_img2_after_start: false,
-  auto_send_img3_after_start: false,
-  second_send_img1_after_start: 0,
-  second_send_img2_after_start: 0,
-  second_send_img3_after_start: 0,
-  img1_after_start: "",
-  img2_after_start: "",
-  img3_after_start: "",
-
-  // text
-  auto_send_text1: false,
-  auto_send_text2: false,
-  auto_send_text3: false,
-  second_send_text1: 0,
-  second_send_text2: 0,
-  second_send_text3: 0,
-  text1_after_betreport: "",
-  text2_after_betreport: "",
-  text3_after_betreport: "",
-
-  // bet report images
-  auto_send_img1_after_betreport: false,
-  auto_send_img2_after_betreport: false,
-  auto_send_img3_after_betreport: false,
-  second_send_img1_after_betreport: 0,
-  second_send_img2_after_betreport: 0,
-  second_send_img3_after_betreport: 0,
-  img1_after_betreport: "",
-  img2_after_betreport: "",
-  img3_after_betreport: "",
+const form = computed({
+  get: () => store.setting,
+  set: () => (store.setting = v),
 });
 
 watch(model, async (open) => {
-  if (!open) return;
-
-  loading.value = true;
-  await store.fetchSetting();
-
-  Object.assign(form, store.setting);
-
-  loading.value = false;
+  if (open) {
+    await store.ensureReady();
+  }
 });
 
 const save = async () => {
@@ -179,7 +130,7 @@ const save = async () => {
   if (!result?.valid) return;
 
   try {
-    await store.saveSetting(form);
+    await store.saveSetting(store.setting);
     notify.success("保存成功");
     model.value = false;
   } catch (err) {

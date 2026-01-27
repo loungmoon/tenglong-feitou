@@ -205,6 +205,15 @@
                   </v-col>
                 </v-row>
               </FieldSetBox>
+              <v-text-field
+                v-model="groupNickname"
+                label="开工群昵称"
+                density="compact"
+                variant="outlined"
+                class="mt-4"
+                readonly
+              >
+              </v-text-field>
             </v-col>
 
             <!-- RIGHT -->
@@ -330,7 +339,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed,watch } from "vue";
 import {
   YES_NO,
   POINT_METHODS,
@@ -339,16 +348,21 @@ import {
   SCREENSHOT_MODES,
   CALC_MODES,
 } from "@/composables/options";
-import { setParameter } from "@/api/system.api";
+import { useGroupPullStore } from "@/stores/group.store"
+import { getParameter,setParameter } from "@/api/system.api";
 import { useNotify } from "@/composables/useNotifiy";
 import NumberField from "@/components/common/NumberField.vue";
 import SelectField from "@/components/common/SelectField.vue";
 
 const model = defineModel({ type: Boolean });
 const notify = useNotify();
+const groupStore = useGroupPullStore()
+
 const loading = ref(false);
 const formRef = ref(null);
 const isValid = ref(false);
+
+const groupNickname = computed(()=> groupStore.setting.group_nickname)
 
 const form = ref({
   banker_odds: null,
@@ -394,6 +408,31 @@ const form = ref({
   should_statistics_truncated: 0,
   change_settings: "百",
   transfer_small_change: 0,
+});
+
+const fetchParameter = async () =>{
+  if(!groupNickname.value ) return
+
+  loading.value = true;
+  try {
+    const res = await getParameter({
+      group_nickname : groupNickname.value,
+    });
+
+    Object.assign(form.value, res.data || {});
+  } catch (err) {
+     notify.error(err || "获取个人参数失败");
+  }finally{
+     loading.value = false;
+  }
+}
+
+watch(model, async (open) => {
+  if (!open) return;
+
+  await groupStore.ensureReady();
+
+  await fetchParameter();
 });
 
 const confirm = async () => {

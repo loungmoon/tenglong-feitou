@@ -9,35 +9,32 @@
     :loading="loading"
     @confirm="confirmLogout"
   >
-    <!-- Content -->
-    <div class="text-center">
-      您确定要退出登录吗？
-    </div>
-
+    <div class="text-center">您确定要退出登录吗？</div>
   </BaseDialog>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import BaseDialog from '@/components/common/BaseDialog.vue'
-import { useRouter } from 'vue-router'
+import { ref } from "vue";
+import BaseDialog from "@/components/common/BaseDialog.vue";
+import { useRouter } from "vue-router";
+import { clearToken } from "@/utils/request";
 
-const router = useRouter()
+const router = useRouter();
 
-const model = defineModel({ type: Boolean })
-const loading = ref(false)
+const model = defineModel({ type: Boolean });
+const loading = ref(false);
 
 const confirmLogout = async () => {
-  if (loading.value) return
+  if (loading.value) return;
 
-  loading.value = true
+  loading.value = true;
   try {
-    localStorage.removeItem("token")
-    
-     router.replace('/login')
+    model.value = false;
+    clearToken();
+
+    await router.replace("/login");
   } finally {
-    loading.value = false
-    model.value = false
+    loading.value = false;
   }
-}
+};
 </script>

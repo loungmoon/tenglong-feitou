@@ -15,6 +15,10 @@ export const setLotteryResultApi = (data) => {
 export const getLotteryResultApi = (data) =>{
 return api.post(`/system/get_auto_lottery_setup`,data);
 }
+
+export const getParameter = (data) => {
+  return api.post(`/system/get_parameter`,data)
+}
   
 export const setParameter = (data) =>{
 return api.post(`/system/parameter_setup`,data);
