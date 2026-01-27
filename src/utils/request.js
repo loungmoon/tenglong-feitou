@@ -24,11 +24,11 @@ api.interceptors.request.use((config) => {
 
 /* response interceptor */
 api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    const { status, data } = error.response || {}
+  (response) => {
+    const data = response.data
 
-    if (status === 401 || status === 403) {
+    // handle backend business status
+    if (data?.status === 401 || data?.status === 403) {
       clearToken()
 
       if (router.currentRoute.value.path !== "/login") {
@@ -37,13 +37,14 @@ api.interceptors.response.use(
           query: { redirect: router.currentRoute.value.fullPath },
         })
       }
+
+      return Promise.reject(data)
     }
 
-    return Promise.reject({
-      response: {
-        data: data || { msg: "请求失败" },
-      },
-    })
+    return data
+  },
+  (error) => {
+    return Promise.reject(error)
   }
 )
 

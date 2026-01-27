@@ -194,7 +194,6 @@ watch(
   { immediate: true, deep: true }
 )
 
-
 const mainResult = ref(null);
 const bankerPair = ref(false);
 const playerPair = ref(false);

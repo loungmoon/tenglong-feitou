@@ -99,12 +99,9 @@ const nicknames = [
 watch(model, async (open) => {
   if (!open) return
 
-  Object.assign(form, {
-  active: store.setting.active,
-  official_website_nickname: store.setting.official_website_nickname,
-  desk_number: store.setting.desk_number,
-  auto_result_report: store.setting.auto_result_report,
-})
+  await store.ensureReady();
+
+  Object.assign(form, store.setting);
 })
 
 /* ---------- SUBMIT ---------- */

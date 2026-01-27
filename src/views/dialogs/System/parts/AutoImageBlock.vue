@@ -1,18 +1,18 @@
 <template>
   <v-checkbox
     :model-value="auto"
-    label="自动发送图片"
+    :label="`自动发送图片${index}`"
     density="compact"
     @update:model-value="$emit('update:auto', $event)"
   />
 
-  <div class="d-flex align-center gap-2 mb-2">
+  <div class="d-flex align-center gap-2 mb-2" style="margin-top: -24px;">
     <v-text-field
       type="number"
       density="compact"
       variant="outlined"
       hide-details
-      style="max-width: 80px"
+      style="max-width: 100px"
       :disabled="!auto"
       :model-value="seconds"
       @update:model-value="$emit('update:seconds', Number($event))"
@@ -62,6 +62,10 @@ import { uploadImageApi } from "@/api/opt.api";
 import { useNotify } from "@/composables/useNotifiy";
 
 defineProps({
+  index: {
+    type: Number,
+    required: true,
+  },
   auto: {
     type: Boolean,
     default: false,

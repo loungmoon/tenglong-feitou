@@ -16,8 +16,6 @@
           label="原台号昵称"
           density="compact"
           variant="outlined"
-          :rules="oldNicknameRules"
-          hide-details="auto"
           readonly
         />
       </v-col>
@@ -30,7 +28,6 @@
           variant="outlined"
           class="mt-4"
           :rules="newNicknameRules"
-          hide-details="auto"
           clearable
         />
       </v-col>
@@ -54,32 +51,19 @@ const visible = defineModel({ type: Boolean })
 
 /* state */
 const loading = ref(false)
-const oldNickname = ref("")
 const newNickname = ref("")
 const formRef = ref(null)
 
-
-/* validation */
-const oldNicknameRules = [
-  v => !!v || "请选择原台号昵称",
-]
+const deskNumber = computed(() => store.setting.desk_number)
 
 const newNicknameRules = computed(() => [
   v => !!v || "请输入新台号昵称",
   v => v.length <= 10 || "昵称不能超过 10 个字符",
-  v => v !== oldNickname.value || "新昵称不能与原昵称相同",
+  v => v !== deskNumber.value || "新昵称不能与原昵称相同",
 ])
 
-const deskNumber = computed({
-  get: () => store.setting.desk_number,
-  set: (val) => {
-    store.setting.desk_number = val;
-  },
-});
-
-/* reset form when dialog closes */
-watch(visible, (val) => {
-  if (!val) {
+watch(visible, (open) => {
+  if (!open) {
     newNickname.value = ""
     loading.value = false
   }
@@ -94,7 +78,7 @@ const handleConfirm = async () => {
   loading.value = true
   try {
     await editDeskNickname({
-      old_desk_nickname: deskNumber,
+      old_desk_nickname: deskNumber.value,
       new_desk_nickname: newNickname.value,
     })
 

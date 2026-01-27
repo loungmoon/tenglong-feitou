@@ -4,13 +4,12 @@
 
     <v-card
       class="image-box"
-      height="160"
       variant="outlined"
       @click="openFile"
     >
       <template v-if="modelValue">
         <div class="img-wrapper">
-          <v-img :src="modelValue" height="160" cover />
+          <v-img :src="modelValue" cover/>
 
           <v-btn
             icon="mdi-close"
@@ -83,7 +82,7 @@ const removeImage = () => {
 
 .img-wrapper {
   position: relative;
-  height: 160px;
+  height: 140px;
 }
 
 .delete-btn {

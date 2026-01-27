@@ -14,19 +14,25 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import BaseDialog from "@/components/common/BaseDialog.vue";
 import { synchronizePoints } from "@/api/system.api"
 import { useNotify } from "@/composables/useNotifiy"
+import { useGroupPullStore } from "@/stores/group.store";
 
 const model = defineModel({ type: Boolean });
 const loading = ref(false);
 const notify = useNotify()
+const groupStore = useGroupPullStore();
+
+const groupNickname = computed(() => groupStore.setting.group_nickname);
 
 const confirm = async () => {
   if (loading.value) return;
      try {
-    const res =await synchronizePoints()
+    const res =await synchronizePoints({
+      group_nickname: groupNickname.value
+    })
 
     notify.success(res.msg)
     model.value = false

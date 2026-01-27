@@ -4,6 +4,7 @@ import {
   setLotteryResultApi,
   deskInfo,
 } from "@/api/system.api";
+import { useGroupPullStore } from "@/stores/group.store";
 
 export const useResultSettingStore = defineStore("resultSetting", {
   state: () => ({
@@ -16,18 +17,31 @@ export const useResultSettingStore = defineStore("resultSetting", {
       auto_result_report: false,
     },
     info: {
-      shoe:null,
-      round: null
-    }
+      shoe: null,
+      round: null,
+    },
   }),
 
   actions: {
-    async fetchSetting() {
-      if (this.loaded) return;
+    async getGroupNickname() {
+      const groupStore = useGroupPullStore();
+      await groupStore.ensureReady();
+      return groupStore.setting.group_nickname;
+    },
 
+    async ensureReady() {
+      if (this.loaded) return;
+      await this.fetchSetting();
+    },
+
+    async fetchSetting() {
       this.loading = true;
       try {
-        const { data } = await getLotteryResultApi();
+        const group_nickname = await this.getGroupNickname();
+
+         const { data } = await getLotteryResultApi({
+          group_nickname,
+        });
 
         this.setting = {
           active: Boolean(data.active),
@@ -45,7 +59,9 @@ export const useResultSettingStore = defineStore("resultSetting", {
     async saveSetting(form) {
       this.loading = true;
       try {
+         const group_nickname = await this.getGroupNickname();
         await setLotteryResultApi({
+          group_nickname,
           active: form.active ? 1 : 0,
           official_website_nickname: form.official_website_nickname,
           desk_number: form.desk_number,
@@ -60,9 +76,8 @@ export const useResultSettingStore = defineStore("resultSetting", {
     },
 
     async getDeskInfo() {
-      if (!this.loaded) {
-      await this.fetchSetting()
-     }
+      await this.ensureReady();
+      
       const deskNumber = this.setting.desk_number;
 
       if (!deskNumber) return;
@@ -72,8 +87,19 @@ export const useResultSettingStore = defineStore("resultSetting", {
 
       this.info = {
         shoe: data.shoe,
-        round: data.round
-      }
+        round: data.round,
+      };
+    },
+
+    reset() {
+      this.loaded = false;
+      this.setting = {
+        active: false,
+        official_website_nickname: "",
+        desk_number: "",
+        auto_result_report: false,
+      };
+      this.info = { shoe: null, round: null };
     },
   },
 });
