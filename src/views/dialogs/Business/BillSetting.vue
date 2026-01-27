@@ -49,8 +49,8 @@
                     v-for="p in playerStore.list"
                     :key="p.playername"
                     color="primary"
-                    :active="playerStore.selected?.playername === p.playername"
-                    @click="playerStore.select(p.playername)"
+                    :active="localPlayerName === p.playername"
+                   @click="selectPlayer(p.playername)"
                   >
                     <template #prepend>
                       <v-icon
@@ -169,7 +169,6 @@ import { setPersonalParameter, getPersonalParameter } from "@/api/system.api";
 import { useNotify } from "@/composables/useNotifiy";
 import NumberField from "@/components/common/NumberField.vue";
 
-
 const model = defineModel({ type: Boolean });
 
 const playerStore = usePlayerStore();
@@ -180,11 +179,8 @@ const loading = ref(false);
 const formRef = ref(null);
 const isValid = ref(false);
 
+const localPlayerName = ref("");
 const groupNickname = computed(()=> groupStore.setting.group_nickname)
-
-const selectedPlayerName = computed(
-  () => playerStore.selected?.playername || ""
-);
 
 /* form */
 const form = ref({
@@ -200,13 +196,15 @@ const form = ref({
 });
 
 const fetchPersonalParameter = async () =>{
-  if(!selectedPlayerName.value || !groupNickname.value ) return
+   if (!model.value) return;             
+  if (!localPlayerName.value) return;
+  if (!groupNickname.value) return;
 
   loading.value = true;
   try {
     const res = await getPersonalParameter({
       group_nickname : groupNickname.value,
-      player_name : selectedPlayerName.value
+      player_name : localPlayerName.value
     });
 
     Object.assign(form.value, res.data || {});
@@ -224,20 +222,18 @@ watch(model, async (open) => {
 
   await playerStore.fetchPlayers();
 
-   if (!playerStore.selected && playerStore.list.length) {
-    playerStore.setSelectedByName(playerStore.list[0].playername);
-  }
+  localPlayerName.value =
+    playerStore.selected?.playername || playerStore.list?.[0]?.playername || "";
 
-  await fetchPersonalParameter();
+  if (localPlayerName.value) {
+    await fetchPersonalParameter();
+  }
 });
 
-watch(selectedPlayerName,
-  async (name) => {
-    if (name) {
-      await fetchPersonalParameter();
-    }
-  }
-);
+const selectPlayer = async (name) => {
+  localPlayerName.value = name;
+  await fetchPersonalParameter();
+};
 
 const refreshPlayers = () => {
   playerStore.fetchPlayers(true);
@@ -253,7 +249,7 @@ const save = async () => {
     await setPersonalParameter({
       ...form.value,
       group_nickname: groupNickname.value,
-      player_name: selectedPlayerName.value,
+      player_name: localPlayerName.value,
     });
     notify.success("修改选手成功");
     model.value = false;

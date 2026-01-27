@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed,watch } from "vue";
 import { getPlayerScoreDataApi } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
 import { usePlayerStore } from "../stores/player.store";
@@ -124,6 +124,14 @@ const fetchScoreData = async () => {
     loading.value = false;
   }
 };
+
+watch(
+  () => users.value.length,
+  () => {
+    fetchScoreData();
+  },
+  { deep: true, immediate: true },
+);
 
 onMounted(() => {
     let interval = null;

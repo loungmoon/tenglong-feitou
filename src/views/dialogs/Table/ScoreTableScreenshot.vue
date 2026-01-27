@@ -18,11 +18,12 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue"
+import { ref, watch,computed } from "vue"
 import html2canvas from "html2canvas"
 import { useUiStore } from "@/stores/ui.store"
 import BaseDialog from "@/components/common/BaseDialog.vue"
 import { uploadImageApi, sendScoreReportImageApi } from "@/api/opt.api"
+import { useGroupPullStore } from "@/stores/group.store"
 
 const model = defineModel({ type: Boolean })
 const loading = ref(false)
@@ -30,6 +31,9 @@ const previewUrl = ref(null)
 const imageBlob = ref(null)
 
 const uiStore = useUiStore()
+const groupStore = useGroupPullStore()
+
+const groupNickname = computed(()=> groupStore.setting.group_nickname)
 
 /* 📸 Take screenshot when dialog opens */
 watch(model, async (open) => {
@@ -76,7 +80,10 @@ const handleConfirm = async () => {
 
     if (!imageUrl) throw new Error("Upload failed")
 
-    await sendScoreReportImageApi({ imageUrl })
+    await sendScoreReportImageApi({ 
+      url:imageUrl,
+      group_nickname: groupNickname.value
+    })
 
     model.value = false
   } catch (e) {
