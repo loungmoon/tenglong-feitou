@@ -44,10 +44,6 @@ export const usePlayerStore = defineStore("player", {
       this.selected = this.list.find((p) => p.playername === name) || null;
     },
 
-    select(name) {
-      this.setSelectedByName(name);
-    },
-
     async createPlayer(payload) {
       await createPlayerApi(payload);
       await this.fetchPlayers(true);

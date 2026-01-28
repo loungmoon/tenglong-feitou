@@ -15,7 +15,7 @@
 
       <v-card-text>
         <v-row>
-          <v-col cols="12" md="3">
+          <v-col cols="12" md="4">
             <v-btn
               block
               class="mb-3"
@@ -142,7 +142,7 @@
           </v-col>
 
           <!-- ========== RIGHT PANEL ========== -->
-          <v-col cols="12" md="9">
+          <v-col cols="12" md="8">
             <v-table fixed-header height="500">
               <thead>
                 <tr>
