@@ -3,26 +3,26 @@
     <v-card-text>
       <v-row align="center">
         <v-col cols="4">
-          <v-card variant="tonal" color="error" class="text-center">
+          <v-card variant="tonal" color="#d38054" class="text-center">
             <div class="text-caption">台面筹码</div>
             <div class="text-h6 font-weight-bold">-20,000</div>
           </v-card>
         </v-col>
 
-        <v-col cols="8" class="text-right text-primary">
+        <v-col cols="8" class="text-right text-[#0d47a1]">
           <div>选手名称</div>
           <div>代理名称</div>
           <div>初始积分</div>
         </v-col>
       </v-row>
 
-      <v-row justify="space-around" class="text-error my-3">
+      <v-row justify="space-around" class="text-[#d38054] my-3">
         <span>显示: 5</span>
         <span>总赢: 0</span>
         <span>总输: 1</span>
       </v-row>
 
-      <div class="text-center text-purple my-5">
+      <div class="text-center text-[#0d47a1] my-5">
         <div>非虚拟剩余分汇总: 59285</div>
         <div>非虚拟初始分汇总: 80400</div>
       </div>
@@ -101,16 +101,15 @@
     <v-card-text>
       <v-btn-toggle
         v-model="mainResult"
-        mandatory
         divided
         density="comfortable"
         class="w-100 mb-3"
       >
-        <v-btn value="banker" color="red-lighten-4" class="flex-1"> 庄 </v-btn>
+        <v-btn value="banker" color="error" class="flex-1"> 庄 </v-btn>
 
-        <v-btn value="tie" color="green-lighten-4" class="flex-1"> 和 </v-btn>
+        <v-btn value="tie" color="green" class="flex-1"> 和 </v-btn>
 
-        <v-btn value="player" color="blue-lighten-4" class="flex-1"> 闲 </v-btn>
+        <v-btn value="player" color="blue" class="flex-1"> 闲 </v-btn>
       </v-btn-toggle>
 
       <v-row dense>
@@ -120,8 +119,8 @@
             label="庄对"
             density="compact"
             hide-details
-            color="red"
-            class="bg-red-lighten-4 rounded pa-1"
+            color="#fff"
+            class="bg-error rounded pa-1"
           />
         </v-col>
 
@@ -131,18 +130,16 @@
             label="闲对"
             density="compact"
             hide-details
-            color="blue"
-            class="bg-blue-lighten-4 rounded pa-1"
+            color="#ffffff"
+            class="bg-blue rounded pa-1"
           />
         </v-col>
       </v-row>
-      <v-btn block :loading="loading" :disabled="disabled" size="large" color="primary" @click="submitResult" class="mt-4">
+      <v-btn block :loading="loading" :disabled="disabled" size="large" color="#d17b4d" @click="submitResult" class="mt-4">
         确认开奖
       </v-btn>
     </v-card-text>
   </v-card>
-
-
 
   <NextShoe v-model="dlgNextShoe" :desk-number="deskNumber" />
   <NextRound

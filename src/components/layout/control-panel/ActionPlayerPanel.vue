@@ -4,7 +4,7 @@
       <v-row dense>
         <v-col cols="12" md="7">
           <v-alert
-            type="error"
+            color="#d17b4d"
             variant="text"
             density="compact"
             class="mb-2 border"
@@ -23,7 +23,7 @@
               <v-list-item
                 v-for="p in playerStore.list"
                 :key="p.playername"
-                color="primary"
+                color="#0d47a1"
                 :active="playerStore.selected?.playername === p.playername"
                 @click="selectPlayer(p.playername)"
               >

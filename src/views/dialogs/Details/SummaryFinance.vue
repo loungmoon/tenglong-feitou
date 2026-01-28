@@ -5,7 +5,7 @@
         class="d-flex justify-space-between align-center bg-grey-lighten-3"
       >
         <div class="d-flex align-center">
-          <v-icon class="mr-2">mdi-chart-box</v-icon>
+          <v-icon class="mr-2" color="primary">mdi-chart-box</v-icon>
           <span class="font-weight-bold">选手数据查询及统计</span>
         </div>
         <v-btn icon variant="text" @click="close">
@@ -19,10 +19,10 @@
             <v-btn
               block
               class="mb-3"
-              color="warning"
+              color="#d17b4d"
               :loading="playerStore.loading"
               :disabled="playerStore.loading"
-              @click="refreshData()"
+              @click="reset()"
             >
               刷新选手
             </v-btn>
@@ -45,29 +45,42 @@
               </v-col>
             </v-row>
 
-            <!-- <v-alert type="error" variant="text" density="compact" class="mt-2">
-              没有 ☆ 号为隐藏选手
-            </v-alert> -->
+           <v-alert
+            color="#d17b4d"
+            variant="text"
+            density="compact"
+            class="mb-2 border"
+          >
+            <v-icon size="small">mdi-star-off-outline</v-icon>
+            号为隐藏选手
+          </v-alert>
 
-            <v-select
-              v-model="form.name"
-              :items="playerStore.nameList"
-              label="选手"
-              density="compact"
-              clearable
-            />
-
-            <v-sheet border rounded class="pa-2 overflow-y-auto" height="200">
-              <div
-                v-for="p in playerStore.nameList"
-                :key="p"
-                class="py-1"
-                :class="p === form.name ? 'text-error font-weight-bold' : ''"
+          <v-sheet
+            border
+            rounded
+            class="mt-1 pa-2 overflow-y-auto"
+            height="300"
+          >
+            <v-list density="compact">
+              <v-list-item
+                v-for="p in playerStore.list"
+                :key="p.playername"
+                :active="playerStore.selected?.playername === p.playername"
+                color="#0d47a1"
+                @click="selectPlayer(p.playername)"
               >
-                <v-icon size="14">mdi-star</v-icon>
-                {{ p }}
-              </div>
-            </v-sheet>
+                <template #prepend>
+                  <v-icon
+                    :icon="p.is_hide ? 'mdi-star-off-outline' : 'mdi-star'"
+                  />
+                </template>
+
+                <v-list-item-title>
+                  {{ p.playername }}
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-sheet>
 
             <!-- Shoe / Round -->
             <v-row dense class="mt-4" align="center">
@@ -100,45 +113,16 @@
               density="compact"
             />
 
-            <!-- Buttons -->
+            <!-- Query button -->
             <v-btn
               block
-              color="warning"
-              class="mb-2"
-              @click="querySingle"
-              :disabled="!canQuerySingle"
+              color="#d17b4d"
+              class="mt-2"
+              :disabled="!queryMode"
+              @click="query"
             >
-              按天查询单个选手
-            </v-btn>
-
-            <v-btn
-              block
-              color="warning"
-              class="mb-2"
-              @click="queryAll"
-              :disabled="!canQueryAll"
-            >
-              按天查询所有选手
-            </v-btn>
-
-            <v-btn
-              block
-              color="warning"
-              @click="queryByShoe"
-              :disabled="!canQueryByShoe"
-              class="mb-2"
-            >
-              按天查某靴所有选手
-            </v-btn>
-
-            <v-btn
-              block
-              color="warning"
-              :disabled="!canByNameShoeRound"
-              @click="queryByNameShoeRound"
-            >
-              按天按靴查询单个选手
-            </v-btn>
+              {{ queryLabel }}
+          </v-btn>
           </v-col>
 
           <!-- ========== RIGHT PANEL ========== -->
@@ -186,6 +170,9 @@ const model = defineModel({ type: Boolean });
 const notify = useNotify();
 const playerStore = usePlayerStore();
 
+const rows = ref([]);
+const tableMode = ref("normal");
+
 const form = ref({
   name: "",
   shoe: null,
@@ -195,27 +182,8 @@ const form = ref({
   is_contains_virtual: 0,
 });
 
-const rows = ref([]);
-
-const tableMode = ref("normal");
-
-const headers = computed(() => {
-  if (tableMode.value === "byNameShoe") {
-    return [
-      { title: "选手", key: "username" },
-      { title: "场次 (cc)", key: "cc" },
-      { title: "局次 (jc)", key: "jc" },
-      { title: "参考名称", key: "reference_name" },
-      { title: "三宝盈利", key: "sb_yl" },
-      { title: "闲庄盈利", key: "sx_yl" },
-      { title: "三宝下注", key: "xml_sb" },
-      { title: "闲庄下注", key: "xml_sx" },
-      { title: "有效下注", key: "yxxz" },
-    ];
-  }
-
-  // default table
-  return [
+const headersMap = {
+  normal: [
     { title: "选手", key: "username" },
     { title: "参考名称", key: "reference_name" },
     { title: "三宝盈利", key: "sb_yl" },
@@ -223,96 +191,122 @@ const headers = computed(() => {
     { title: "三宝下注", key: "xml_sb" },
     { title: "闲庄下注", key: "xml_sx" },
     { title: "有效下注", key: "yxxz" },
-  ];
+  ],
+  byNameShoe: [
+    { title: "选手", key: "username" },
+    { title: "场次", key: "cc" },
+    { title: "局次", key: "jc" },
+    { title: "参考名称", key: "reference_name" },
+    { title: "三宝盈利", key: "sb_yl" },
+    { title: "闲庄盈利", key: "sx_yl" },
+    { title: "三宝下注", key: "xml_sb" },
+    { title: "闲庄下注", key: "xml_sx" },
+    { title: "有效下注", key: "yxxz" },
+  ],
+};
+
+const headers = computed(() => headersMap[tableMode.value]);
+
+const hasDateRange = computed(
+  () => !!form.value.startTime && !!form.value.endTime
+);
+
+const queryMode = computed(() => {
+  const { name, shoe, round } = form.value;
+
+  if (name && shoe && round) return "BY_NAME_SHOE_ROUND";
+  if (hasDateRange.value && name && !shoe) return "SINGLE";
+  if (hasDateRange.value && shoe && !name) return "BY_SHOE";
+  if (hasDateRange.value && !name && !shoe) return "ALL";
+
+  return null;
 });
 
-/* load players when open */
+const queryLabel = computed(() => ({
+  SINGLE: "按天查询单个选手",
+  ALL: "按天查询所有选手",
+  BY_SHOE: "按天查某靴所有选手",
+  BY_NAME_SHOE_ROUND: "按天按靴查询单个选手",
+}[queryMode.value] || "查询"));
+
 watch(model, async (open) => {
   if (!open) return;
   await playerStore.fetchPlayers();
 });
 
-const refreshData = async () => {
-  try {
-    rows.value = [];
-    form.value.name = "";
-    form.value.shoe = null;
-    form.value.round = null;
-    form.value.startTime = "";
-    form.value.endTime = "";
-
-    await playerStore.fetchPlayers(true);
-
-    notify.success("选手列表已刷新");
-  } catch (err) {
-    notify.error("刷新选手失败");
-    console.error(err);
-  }
+const selectPlayer = (name) => {
+  form.value.name = name;
+  playerStore.setSelectedByName(name);
 };
 
-const hasDateRange = computed(
-  () => !!form.value.startTime && !!form.value.endTime,
-);
-
-const canQuerySingle = computed(
-  () => hasDateRange.value && !!form.value.name && !form.value.shoe,
-);
-
-const canQueryAll = computed(
-  () => hasDateRange.value && !form.value.name && !form.value.shoe,
-);
-
-const canQueryByShoe = computed(
-  () => hasDateRange.value && !!form.value.shoe && !form.value.name,
-);
-
-const canByNameShoeRound = computed(
-  () => !!form.value.name && !!form.value.shoe && !!form.value.round,
-);
-
-const baseBody = () => ({
+const basePayload = () => ({
   startTime: form.value.startTime,
   endTime: form.value.endTime,
   is_contains_virtual: form.value.is_contains_virtual,
 });
 
-const querySingle = async () => {
-   tableMode.value = "normal";
-  const res = await queryPlayerDetails({
-    ...baseBody(),
-    name: form.value.name,
-  });
-  notify.success(res.msg);
-  rows.value = res.data || [];
+const query = async () => {
+  rows.value = [];
+
+  try {
+    let res;
+
+    switch (queryMode.value) {
+      case "SINGLE":
+        tableMode.value = "normal";
+        res = await queryPlayerDetails({
+          ...basePayload(),
+          name: form.value.name,
+        });
+        break;
+
+      case "ALL":
+        tableMode.value = "normal";
+        res = await queryPlayerDetails(basePayload());
+        break;
+
+      case "BY_SHOE":
+        tableMode.value = "normal";
+        res = await queryPlayerDetails({
+          ...basePayload(),
+          shoe: form.value.shoe,
+        });
+        break;
+
+      case "BY_NAME_SHOE_ROUND":
+        tableMode.value = "byNameShoe";
+        res = await queryPlayerDetailsByNameShoe({
+          ...basePayload(),
+          name: form.value.name,
+          shoe: form.value.shoe,
+          round: form.value.round,
+        });
+        break;
+
+      default:
+        notify.error("查询条件不完整");
+        return;
+    }
+
+    notify.success(res.msg);
+    rows.value = res.data || [];
+  } catch (err) {
+    console.error(err);
+    notify.error("查询失败");
+  }
 };
 
-const queryAll = async () => {
-   tableMode.value = "normal";
-  const res = await queryPlayerDetails(baseBody());
-  notify.success(res.msg);
-  rows.value = res.data || [];
-};
-
-const queryByShoe = async () => {
-   tableMode.value = "normal";
-  const res = await queryPlayerDetails({
-    ...baseBody(),
-    shoe: form.value.shoe,
-  });
-  notify.success(res.msg);
-  rows.value = res.data || [];
-};
-
-const queryByNameShoeRound = async () => {
-  tableMode.value = "byNameShoe";
-  const res = await queryPlayerDetailsByNameShoe({
-    ...baseBody(),
-    name: form.value.name,
-    shoe: form.value.shoe,
-    round: form.value.round,
-  });
-  notify.success(res.msg);
-  rows.value = res.data || [];
+const reset = () => {
+  rows.value = [];
+  form.value = {
+    name: "",
+    shoe: null,
+    round: null,
+    startTime: "",
+    endTime: "",
+    is_contains_virtual: 0,
+  };
+  playerStore.selected = null;
 };
 
 const close = () => {

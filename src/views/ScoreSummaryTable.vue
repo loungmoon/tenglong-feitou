@@ -1,35 +1,35 @@
 <template>
   <v-card elevation="0">
     <div ref="betScoreRef">
-    <v-data-table
-      :headers="headers"
-      :items="items"
-      :loading="loading"
-      density="compact"
-      hide-default-footer
-      disable-sort
-      item-key="name"
-      class="desktop-table mt-5"
-      :row-props="rowProps"
-    >
-      <!-- Loading -->
-      <template #loading>
-        <v-skeleton-loader type="table-row@7" />
-      </template>
+      <v-data-table
+        :headers="headers"
+        :items="items"
+        :loading="loading"
+        density="compact"
+        hide-default-footer
+        disable-sort
+        :items-per-page="-1"
+        item-key="name"
+        class="desktop-table mt-5"
+        :row-props="rowProps"
+      >
+        <!-- Loading -->
+        <template #loading>
+          <v-skeleton-loader type="table-row@7"/>
+        </template>
 
-      <!-- Name -->
-      <template #item.name="{ item }">
-        <strong v-if="item.name === '合计'">
-          {{ item.name }}
-        </strong>
-        <span v-else>
-          {{ item.name }}
-        </span>
-      </template>
-    </v-data-table>
+        <!-- Name -->
+        <template #item.name="{ item }">
+          <strong v-if="item.name === '合计'">
+            {{ item.name }}
+          </strong>
+          <span v-else>
+            {{ item.name }}
+          </span>
+        </template>
+      </v-data-table>
     </div>
   </v-card>
-  
 </template>
 
 <script setup>
@@ -40,11 +40,19 @@ import { usePlayerStore } from "../stores/player.store";
 import { useResultSettingStore } from "../stores/resultsetting.store";
 import { useUiStore } from "@/stores/ui.store";
 
+const notify = useNotify();
 const playStore = usePlayerStore();
 const resultStore = useResultSettingStore();
 const uiStore = useUiStore();
 
-const users = computed(() => playStore.userList);
+const betScoreRef = ref(null);
+const loading = ref(false);
+
+const players = computed(() => playStore.userList);
+const shoe = computed(() => resultStore.info.shoe);
+const round = computed(() => resultStore.info.round);
+
+const items = ref([]);
 
 const headers = [
   { title: "姓名", key: "name", align: "center" },
@@ -55,104 +63,77 @@ const headers = [
   { title: "总积分", key: "total_points", align: "center" },
 ];
 
-/* ----------------------------
-   State
------------------------------ */
-const items = ref([]);
-const loading = ref(false);
-const notify = useNotify();
-const betScoreRef = ref("");
-
 const fetchScoreData = async () => {
+  if (!players.value.length || !shoe.value || !round.value) return;
+
   loading.value = true;
+
   try {
-    await new Promise((r) => setTimeout(r, 1000)); // simulate API
     const res = await getPlayerScoreDataApi({
-      shoe: resultStore.info.shoe,
-      round: resultStore.info.round,
+      shoe: shoe.value,
+      round: round.value,
     });
-    if (res.code == 200) {
-        notify.success(res.msg);
-        items.value = users.value.map((u) => {
-            return {
-                name: u.playername,
-                yl: 0,
-                score: 0,
-                raw_score: 0,
-                daily_points: 0,
-                total_points: 0,
-            }
-        })
 
-        const list = res.data;
-        let totalYl = 0;
-        let totalScore = 0;
-        let totalRawScore = 0;
-        let totalDailyPoint = 0;
-        let totalPoint = 0;
-        for (let i = 0; i < list.length; i++) {
-            const l = list[i];
-            const item = items.value.find(d => d.name === l.username);
-            if (item) {
-                item.yl = l?.yl ?? 0;
-                item.score = l?.score ?? 0;
-                item.raw_score = l?.raw_score ?? 0;
-                item.daily_points = l?.daily_points ?? 0;
-                item.total_points = l?.total_points ?? 0;
-
-                totalYl += l?.yl ?? 0;
-                totalScore += l?.score ?? 0;
-                totalRawScore += l?.raw_score ?? 0;
-                totalDailyPoint += l?.daily_points ?? 0;
-                totalPoint += l?.total_points ?? 0;
-            }
-        }
-
-        items.value.push({
-            name: '合计',
-            yl: totalYl,
-            score: totalScore,
-            raw_score: totalRawScore,
-            daily_points: totalDailyPoint,
-            total_points: totalPoint,
-        });
-    } else {
-        notify.error(res.msg);
+    if (res.code !== 200) {
+      notify.error(res.msg);
+      return;
     }
-    
+
+    const scoreMap = new Map();
+    res.data.forEach((r) => {
+      scoreMap.set(r.username, r);
+    });
+
+    const totals = {
+      yl: 0,
+      score: 0,
+      raw_score: 0,
+      daily_points: 0,
+      total_points: 0,
+    };
+
+    const rows = players.value.map((p) => {
+      const s = scoreMap.get(p.playername) ?? {};
+
+      Object.keys(totals).forEach(
+        (k) => (totals[k] += s[k] ?? 0)
+      );
+
+      return {
+        name: p.playername,
+        yl: s.yl ?? 0,
+        score: s.score ?? 0,
+        raw_score: s.raw_score ?? 0,
+        daily_points: s.daily_points ?? 0,
+        total_points: s.total_points ?? 0,
+      };
+    });
+
+    rows.push({ name: "合计", ...totals });
+
+    items.value = rows;
+  } catch (err) {
+    console.error(err);
+    notify.error("获取积分数据失败");
   } finally {
     loading.value = false;
   }
 };
 
 watch(
-  () => users.value.length,
-  () => {
-    fetchScoreData();
-  },
-  { deep: true, immediate: true },
+  () => [
+    players.value.map(p => p.playername).join(),
+    shoe.value,
+    round.value,
+  ],
+  fetchScoreData,
+  { immediate: true }
 );
 
 onMounted(() => {
-    let interval = null;
-    let retry = 10;
-    interval = setInterval(() => {
-        if (users.value.length > 0 && retry >= 0) {
-            fetchScoreData();
-            clearInterval(interval);
-            retry = 10;
-        } else {
-            retry -= 1;
-            if (retry == 0) clearInterval(interval);
-        }
-    }, 1000);
-
-    uiStore.scoreTableEl = betScoreRef.value
+  uiStore.scoreTableEl = betScoreRef.value;
 });
 
-/* ----------------------------
-   Row styling
------------------------------ */
 const rowProps = ({ item }) => {
   if (item.name === "合计") {
     return { class: "total-row" };

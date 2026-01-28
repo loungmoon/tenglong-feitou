@@ -1,6 +1,6 @@
 <template>
   <v-card>
-    <div ref="betTableRef">
+     <div ref="betTableRef">
       <v-data-table
         :headers="headers"
         :items="items"
@@ -8,6 +8,7 @@
         density="compact"
         hide-default-footer
         disable-sort
+        :items-per-page="-1"
         class="desktop-table"
         item-key="name"
         :row-props="rowProps"
@@ -32,14 +33,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { getPlayerBetDataApi } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
 import { usePlayerStore } from "@/stores/player.store";
 import { useUiStore } from "@/stores/ui.store";
 
-const store = usePlayerStore();
-const users = computed(() => store.userList);
+const notify = useNotify();
+const playerStore = usePlayerStore();
+const uiStore = useUiStore();
+
+const betTableRef = ref(null);
+const loading = ref(false);
+
+const players = computed(() => playerStore.userList);
+
+const items = ref([]);
 
 const headers = [
   { title: "姓名", key: "name", width: 90 },
@@ -52,109 +61,73 @@ const headers = [
   { title: "完美", key: "perfect", align: "center" },
 ];
 
-const items = ref([]);
-const loading = ref(false);
-const notify = useNotify();
-const betTableRef = ref(null);
-
-const uiStore = useUiStore()
-
 const fetchTableData = async () => {
+  if (!players.value.length) return;
+
   loading.value = true;
+
   try {
     const res = await getPlayerBetDataApi();
-    if (res.code == 200) {
-      notify.success(res.msg);
+    if (res.code !== 200) return;
 
-      items.value = users.value.map((u) => {
-        return {
-          name: u.playername,
-          bank: 0,
-          bankPair: 0,
-          player: 0,
-          playerPair: 0,
-          tie: 0,
-          lucky6: 0,
-          perfect: 0,
-        };
-      });
+    const betMap = new Map();
 
-      const list = res.data;
-      let totalBank = 0;
-      let totalBankPair = 0;
-      let totalPlayer = 0;
-      let totalPlayerPair = 0;
-      let totalTie = 0;
-      let totalLucky6 = 0;
-      let totalPerfect = 0;
+    res.data.forEach((r) => {
+      betMap.set(r.name, r.bet_detail ?? {});
+    });
 
-      for (let i = 0; i < list.length; i++) {
-        const r = list[i];
-        const bet = r.bet_detail;
-        const item = items.value.find((d) => d.name === r.name);
-        if (item) {
-          item.bank = bet?.bank ?? 0;
-          item.bankPair = bet?.bankPair ?? 0;
-          item.player = bet?.player ?? 0;
-          item.playerPair = bet?.playerPair ?? 0;
-          item.tie = bet?.tie ?? 0;
-          item.lucky6 = bet?.lucky6 ?? 0;
-          item.perfect = bet?.perfect ?? 0;
+    let totals = {
+      bank: 0,
+      bankPair: 0,
+      player: 0,
+      playerPair: 0,
+      tie: 0,
+      lucky6: 0,
+      perfect: 0,
+    };
 
-          totalBank += bet?.bank ?? 0;
-          totalBankPair += bet?.bankPair ?? 0;
-          totalPlayer += bet?.player ?? 0;
-          totalPlayerPair += bet?.playerPair ?? 0;
-          totalTie += bet?.tie ?? 0;
-          totalLucky6 += bet?.lucky6 ?? 0;
-          totalPerfect += bet?.perfect ?? 0;
-        }
-      }
+    const rows = players.value.map((p) => {
+      const bet = betMap.get(p.playername) ?? {};
 
-      items.value.push({
-        name: "合计",
-        bank: totalBank,
-        bankPair: totalBankPair,
-        player: totalPlayer,
-        playerPair: totalPlayerPair,
-        tie: totalTie,
-        lucky6: totalLucky6,
-        perfect: totalPerfect,
-      });
-    }
+      Object.keys(totals).forEach(
+        (k) => (totals[k] += bet[k] ?? 0)
+      );
+
+      return {
+        name: p.playername,
+        bank: bet.bank ?? 0,
+        bankPair: bet.bankPair ?? 0,
+        player: bet.player ?? 0,
+        playerPair: bet.playerPair ?? 0,
+        tie: bet.tie ?? 0,
+        lucky6: bet.lucky6 ?? 0,
+        perfect: bet.perfect ?? 0,
+      };
+    });
+
+    rows.push({ name: "合计", ...totals });
+
+    items.value = rows;
+  } catch (err) {
+    console.error(err);
+    notify.error("获取投注数据失败");
   } finally {
     loading.value = false;
   }
 };
 
 watch(
-  () => users.value.length,
+  () => players.value.map(p => p.playername),
   () => {
     fetchTableData();
   },
-  { deep: true, immediate: true },
+  { immediate: true }
 );
 
 onMounted(() => {
-  let interval = null;
-  let retry = 10;
-  interval = setInterval(() => {
-    if (users.value.length > 0 && retry >= 0) {
-      fetchTableData();
-      clearInterval(interval);
-      retry = 10;
-    } else {
-      retry -= 1;
-      if (retry == 0) clearInterval(interval);
-    }
-  }, 1000);
-
-   uiStore.betTableEl = betTableRef.value
+  uiStore.betTableEl = betTableRef.value;
 });
 
-/* ----------------------------
-   Row styling
------------------------------ */
 const rowProps = ({ item }) => {
   if (item.name === "合计") {
     return { class: "total-row" };
