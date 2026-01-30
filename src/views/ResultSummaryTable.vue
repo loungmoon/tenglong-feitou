@@ -36,10 +36,12 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { getPlayerBetDataApi } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
+import { useGroupPullStore } from "@/stores/group.store";
 import { usePlayerStore } from "@/stores/player.store";
 import { useUiStore } from "@/stores/ui.store";
 
 const notify = useNotify();
+const grpupStore = useGroupPullStore();
 const playerStore = usePlayerStore();
 const uiStore = useUiStore();
 
@@ -67,7 +69,9 @@ const fetchTableData = async () => {
   loading.value = true;
 
   try {
-    const res = await getPlayerBetDataApi();
+    const res = await getPlayerBetDataApi({
+      group_nickname: grpupStore.setting.group_nickname
+    });
     if (res.code !== 200) return;
 
     const betMap = new Map();

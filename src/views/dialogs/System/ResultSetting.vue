@@ -99,7 +99,7 @@ const nicknames = [
 watch(model, async (open) => {
   if (!open) return
 
-  await store.ensureReady();
+  // await store.ensureReady();
 
   Object.assign(form, store.setting);
 })

@@ -136,11 +136,9 @@ const loading = ref(false);
 const formRef = ref(null);
 const isValid = ref(false);
 
+const form = ref({});
 
-const form = computed({
-  get: () => store.setting,
-  set: (v) => (store.setting = v),
-});
+let originalNickname = "";
 
 const requiredData = [
   v => !!v || '必填',
@@ -148,21 +146,34 @@ const requiredData = [
 ]
 
 watch(model, async (open) => {
-  if (open) {
-    await store.ensureReady();
-  }
+  if (!open) return;
+
+  await store.ensureReady();
+
+  form.value = { ...store.setting };
+  originalNickname = store.setting.group_nickname;
 });
 
 const save = async () => {
   const result = await formRef.value?.validate();
   if (!result?.valid) return;
 
+   const nicknameChanged =
+    form.value.group_nickname !== originalNickname;
+
   try {
-    await store.saveSetting(store.setting);
+    loading.value = true;
+    await store.saveSetting(form.value);
+
+     if (nicknameChanged) {
+      await store.reload(); // this calls get API again ONCE
+    }
     notify.success("保存成功");
     model.value = false;
   } catch (err) {
-    notify.error(err || "保存失败");
+    notify.error("保存失败");
+  } finally {
+    loading.value = false;
   }
 };
 

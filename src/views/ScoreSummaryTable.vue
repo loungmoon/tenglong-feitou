@@ -36,11 +36,13 @@
 import { ref, onMounted, computed,watch } from "vue";
 import { getPlayerScoreDataApi } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
+import { useGroupPullStore } from "@/stores/group.store";
 import { usePlayerStore } from "../stores/player.store";
 import { useResultSettingStore } from "../stores/resultsetting.store";
 import { useUiStore } from "@/stores/ui.store";
 
 const notify = useNotify();
+const grpupStore = useGroupPullStore();
 const playStore = usePlayerStore();
 const resultStore = useResultSettingStore();
 const uiStore = useUiStore();
@@ -70,6 +72,7 @@ const fetchScoreData = async () => {
 
   try {
     const res = await getPlayerScoreDataApi({
+      group_nickname: grpupStore.setting.group_nickname,
       shoe: shoe.value,
       round: round.value,
     });

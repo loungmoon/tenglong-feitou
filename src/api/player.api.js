@@ -1,7 +1,7 @@
 import api from "@/utils/request"
 
-export const getPlayersApi = () => {
-  return api.post('/player/get_player')
+export const getPlayersApi = (data) => {
+  return api.post('/player/get_player',data)
 }
 
 export const createPlayerApi = (data) =>{

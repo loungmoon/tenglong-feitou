@@ -31,23 +31,43 @@
 </template>
 
 <script setup>
-import { onMounted } from "vue";
+import { onMounted ,watch, ref } from "vue";
 import AppNavbar from "@/components/layout/AppNavbar.vue";
 import Dashbord from "@/views/Dashboard.vue"
 import AppControlPanel from "@/components/layout/control-panel/ControlPanel.vue";
 import DialogContainer from "@/components/dialogs/DialogContainer.vue";
 import { useDialogStore } from "@/stores/dialog.store";
-import { useResultSettingStore } from "@/stores/resultsetting.store"
+import { useResultSettingStore } from "@/stores/resultsetting.store";
+import { useGroupPullStore } from "@/stores/group.store";
+import { usePlayerStore } from "@/stores/player.store";
 
 import menus from '@/config/menus'
 
 const dialog = useDialogStore();
-const resultstore = useResultSettingStore()
+const groupStore = useGroupPullStore();
+const resultstore = useResultSettingStore();
+const playerStore = usePlayerStore();
+
+const groupReady = ref(false);
 
 onMounted(async () => {
+  await groupStore.ensureReady()
+  groupReady.value = true;
+
   await resultstore.fetchSetting()
   await resultstore.getDeskInfo()
-})
+});
+
+watch(
+  () => groupStore.setting.group_nickname,
+  async (newVal, oldVal) => {
+    if (!groupReady.value) return;
+    if (!newVal || newVal === oldVal) return;
+
+    playerStore.resetStore();
+    await playerStore.fetchPlayers(true);
+  }
+);
 
 const summary = { total: "1115", n: "1000", misc: "105", hedge: "10" };
 

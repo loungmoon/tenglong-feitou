@@ -430,7 +430,7 @@ const fetchParameter = async () =>{
 watch(model, async (open) => {
   if (!open) return;
 
-  await groupStore.ensureReady();
+  // await groupStore.ensureReady();
 
   await fetchParameter();
 });
