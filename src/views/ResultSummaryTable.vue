@@ -41,16 +41,18 @@ import { usePlayerStore } from "@/stores/player.store";
 import { useUiStore } from "@/stores/ui.store";
 
 const notify = useNotify();
-const grpupStore = useGroupPullStore();
+const groupStore = useGroupPullStore();
 const playerStore = usePlayerStore();
 const uiStore = useUiStore();
 
 const betTableRef = ref(null);
 const loading = ref(false);
+const items = ref([]);
+
 
 const players = computed(() => playerStore.userList);
 
-const items = ref([]);
+const groupNickName = computed(()=> groupStore.setting.group_nickname)
 
 const headers = [
   { title: "姓名", key: "name", width: 90 },
@@ -63,14 +65,34 @@ const headers = [
   { title: "完美", key: "perfect", align: "center" },
 ];
 
+const emptyTotals = () => ({
+  bank: 0,
+  bankPair: 0,
+  player: 0,
+  playerPair: 0,
+  tie: 0,
+  lucky6: 0,
+  perfect: 0,
+});
+
 const fetchTableData = async () => {
-  if (!players.value.length) return;
+  // if (!players.value.length) return;
+
+  if (!groupNickName.value) {
+    items.value = [];
+    return;
+  }
+
+  if (!players.value.length) {
+    items.value = [];
+    return;
+  }
 
   loading.value = true;
 
   try {
     const res = await getPlayerBetDataApi({
-      group_nickname: grpupStore.setting.group_nickname
+      group_nickname: groupNickName.value
     });
     if (res.code !== 200) return;
 
@@ -80,15 +102,17 @@ const fetchTableData = async () => {
       betMap.set(r.name, r.bet_detail ?? {});
     });
 
-    let totals = {
-      bank: 0,
-      bankPair: 0,
-      player: 0,
-      playerPair: 0,
-      tie: 0,
-      lucky6: 0,
-      perfect: 0,
-    };
+    // let totals = {
+    //   bank: 0,
+    //   bankPair: 0,
+    //   player: 0,
+    //   playerPair: 0,
+    //   tie: 0,
+    //   lucky6: 0,
+    //   perfect: 0,
+    // };
+
+    const totals = emptyTotals();
 
     const rows = players.value.map((p) => {
       const bet = betMap.get(p.playername) ?? {};
@@ -119,6 +143,12 @@ const fetchTableData = async () => {
     loading.value = false;
   }
 };
+
+watch(groupNickName,
+  () => {
+    items.value =[];
+  }
+);
 
 watch(
   () => players.value.map(p => p.playername),

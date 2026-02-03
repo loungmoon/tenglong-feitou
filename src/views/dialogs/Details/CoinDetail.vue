@@ -120,21 +120,26 @@
 <script setup>
 import { ref, watch, computed } from "vue";
 import { usePlayerStore } from "@/stores/player.store";
+import { useGroupPullStore } from "@/stores/group.store";
 import { getPlayerScoreDataApi } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
 
 const model = defineModel({ type: Boolean });
 const notify = useNotify();
+
 const playerStore = usePlayerStore();
+const groupStore = useGroupPullStore();
+
 const loading = ref(false);
 
 const form = ref({
-  name: "",
   shoe: null,
   round: null,
 });
 
 const rows = ref([]);
+
+const groupNickName = computed(() => groupStore.setting.group_nickname);
 
 const headers = computed(() => [
   { title: "本局得分", key: "yl" },
@@ -145,48 +150,67 @@ const headers = computed(() => [
   { title: "分红", key: "fh" },
 ]);
 
-/* load players when open */
-watch(model, async (open) => {
-  if (!open) {
-    rows.value = [];
-    resetForm();
-    return;
-  }
-  await playerStore.fetchPlayers();
-});
-
 const canQuery = computed(
-  () => !!form.value.name && !!form.value.shoe && !!form.value.round,
+  () =>
+    !!groupNickName.value &&
+    !!playerStore.selected &&
+    !!form.value.shoe &&
+    !!form.value.round,
 );
 
 const isSelected = (name) => playerStore.selected?.playername === name;
 
 const selectPlayer = (name) => {
-  form.value.name = name;
   playerStore.setSelectedByName(name);
 };
 
 const resetForm = () => {
-  form.value = { name: "", shoe: null, round: null };
+  form.value.shoe = null;
+  form.value.round = null;
 };
 
-watch(
-  () => playerStore.selected,
-  (player) => {
-    if (player) {
-      form.value.name = player.playername;
-    }
-  },
-  { immediate: true },
-);
+const resetTable = () => {
+  rows.value = [];
+};
+
+watch(model, async (open) => {
+  if (!open) {
+    resetForm();
+    resetTable();
+    playerStore.clearSelected();
+    return;
+  }
+  await playerStore.fetchPlayers();
+});
+
+watch(groupNickName, () => {
+  resetForm();
+  resetTable();
+  playerStore.clearSelected();
+});
+
 
 const getScoreData = async () => {
+   if (!canQuery.value) return;
+
   loading.value = true;
   try {
-    const res = await getPlayerScoreDataApi({ ...form.value });
-    notify.success(res.msg);
+    const res = await getPlayerScoreDataApi({ 
+      group_nickname: groupNickName.value,
+      name: playerStore.selected.playername,
+      shoe: form.value.shoe,
+      round: form.value.round,
+     });
+
+      if (res?.code !== 200) {
+      notify.error(res?.msg ?? "查询失败");
+      return;
+    }
     rows.value = (res.data || []).map(mapScoreRow);
-  } finally {
+    notify.success(res.msg);
+  } catch {
+    notify.error("获取点数统计失败");
+  }finally {
     loading.value = false;
   }
 };

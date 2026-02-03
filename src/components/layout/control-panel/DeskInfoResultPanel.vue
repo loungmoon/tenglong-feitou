@@ -135,25 +135,37 @@
           />
         </v-col>
       </v-row>
-      <v-btn block :loading="loading" :disabled="disabled" size="large" color="#d17b4d" @click="submitResult" class="mt-4">
+      <v-btn
+        block
+        :loading="loading"
+        :disabled="disabled"
+        size="large"
+        color="#d17b4d"
+        @click="submitResult"
+        class="mt-4"
+      >
         确认开奖
       </v-btn>
     </v-card-text>
   </v-card>
 
-  <NextShoe v-model="dlgNextShoe" :desk-number="deskNumber" />
+  <NextShoe
+    v-model="dlgNextShoe"
+    :desk-number="deskNumber"
+    @success="refreshDesk"
+  />
   <NextRound
     v-model="dlgNextRound"
     :desk-number="deskNumber"
     @success="handleNextRound"
   />
 
-  <EditShoe 
-  v-model="dlgEditShoe" 
-  :desk-number="deskNumber"
-  :round="form.round" 
-  :shoe="form.shoe"
-  @success="handleEditShoe"
+  <EditShoe
+    v-model="dlgEditShoe"
+    :desk-number="deskNumber"
+    :round="form.round"
+    :shoe="form.shoe"
+    @success="handleEditShoe"
   />
 
   <LockBootRound v-model="dlgLock" />
@@ -161,39 +173,47 @@
 </template>
 
 <script setup>
-import { ref, computed,watch } from "vue";
+import { ref, computed, watch } from "vue";
 import { useResultSettingStore } from "@/stores/resultsetting.store";
 import { useNotify } from "@/composables/useNotifiy";
 import { drawLotteryApi } from "@/api/opt.api";
-import {NextShoe,NextRound,EditShoe,LockBootRound,LastRound } from "@/views/dialogs";
+import { useGroupPullStore } from "@/stores/group.store";
+import {
+  NextShoe,
+  NextRound,
+  EditShoe,
+  LockBootRound,
+  LastRound,
+} from "@/views/dialogs";
 
 const notify = useNotify();
 const store = useResultSettingStore();
+
 const dlgNextShoe = ref(false);
 const dlgNextRound = ref(false);
 const dlgEditShoe = ref(false);
 const dlgLock = ref(false);
 const dlgLast = ref(false);
+
 const loading = ref(false);
 const disabled = ref(false);
+
+const groupStore = useGroupPullStore();
+const groupNickName = computed(() => groupStore.setting.group_nickname);
 
 const form = ref({
   shoe: null,
   round: null,
-})
+});
 
 watch(
   () => store.info,
   (info) => {
-    form.value.shoe = info.shoe
-    form.value.round = info.round
+    form.value.shoe = info.shoe ?? null;
+    form.value.round = info.round ?? null;
   },
-  { immediate: true, deep: true }
-)
-
-const mainResult = ref(null);
-const bankerPair = ref(false);
-const playerPair = ref(false);
+  { immediate: true },
+);
 
 const deskNumber = computed({
   get: () => store.setting.desk_number,
@@ -202,15 +222,9 @@ const deskNumber = computed({
   },
 });
 
-const handleNextRound = (data) => {
-  form.value.round = Number(data.round);
-  // form.value.shoe = Number(data.shos);
-};
-
-const handleEditShoe = (data) => {
-  form.value.shoe = data.shoe
-  form.value.round = data.round
-}
+const mainResult = ref(null);
+const bankerPair = ref(false);
+const playerPair = ref(false);
 
 const resultCode = computed(() => {
   let sum = 0;
@@ -223,6 +237,25 @@ const resultCode = computed(() => {
 
   return sum;
 });
+
+const refreshDesk = async () => {
+  mainResult.value = null;
+  bankerPair.value = false;
+  playerPair.value = false;
+  await store.getDeskInfo();
+};
+
+const handleNextRound = async (data) => {
+  form.value.round = Number(data.round);
+  form.value.shoe = Number(data.shos);
+  await refreshDesk();
+};
+
+const handleEditShoe = async (data) => {
+  form.value.shoe = data.shoe;
+  form.value.round = data.round;
+  await refreshDesk();
+};
 
 /* submit */
 const submitResult = async () => {
@@ -244,6 +277,7 @@ const submitResult = async () => {
     shoe: Number(form.value.shoe),
     round: Number(form.value.round),
     result: resultCode.value,
+    group_nickname: groupNickName.value
   };
 
   loading.value = true;
@@ -251,9 +285,7 @@ const submitResult = async () => {
     await drawLotteryApi(payload);
     notify.success("开奖成功");
 
-    mainResult.value = null;
-    bankerPair.value = false;
-    playerPair.value = false;
+    await refreshDesk();
   } catch (err) {
     console.error(err);
     notify.error("接口无响应 / 请求超时");

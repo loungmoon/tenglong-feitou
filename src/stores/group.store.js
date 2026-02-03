@@ -22,18 +22,20 @@ export const useGroupPullStore = defineStore("groupPull", {
 
   actions: {
     restoreNickname() {
-      if (!this.setting.group_nickname) {
-        this.setting.group_nickname =
-          localStorage.getItem(STORAGE_KEY) || "";
+      const cached = localStorage.getItem(STORAGE_KEY);
+      if (!this.setting.group_nickname && cached) {
+        this.setting.group_nickname = cached;
       }
     },
 
     async fetchSetting(force = false) {
-      // ✅ already loaded → skip
       if (this.loaded && !force) return;
 
       this.restoreNickname();
-      if (!this.setting.group_nickname) return;
+      if (!this.setting.group_nickname) {
+        this.loaded = true;
+        return
+      }
 
       this.loading = true;
       try {
@@ -41,8 +43,11 @@ export const useGroupPullStore = defineStore("groupPull", {
           group_nickname: this.setting.group_nickname,
         });
 
-        const row = res.data?.[0];
-        if (!row) return;
+        const row = res.data?.[0] || null;
+        if (!row){
+          this.loaded = true;
+          return;
+        }
 
         // persist nickname
         if (row.group_nickname) {
@@ -62,7 +67,7 @@ export const useGroupPullStore = defineStore("groupPull", {
           ...normalized,
         };
 
-        this.loaded = true; // mark as loaded
+        this.loaded = true;
       } finally {
         this.loading = false;
       }
@@ -92,7 +97,7 @@ export const useGroupPullStore = defineStore("groupPull", {
           ...this.setting,
           ...form,
         };
-
+       this.loaded = true;
       } finally {
         this.loading = false;
       }

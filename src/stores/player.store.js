@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import { watch } from "vue";
 import { useGroupPullStore } from "@/stores/group.store";
 import {
   getPlayersApi,
@@ -21,10 +20,14 @@ export const usePlayerStore = defineStore("player", {
   getters: {
     nameList: (state) => state.list.map((p) => p.playername),
     userList: (state) => state.list.filter((p) => p.is_hide === 0),
+    isReady: (state) => state.loaded && !state.loading,
   },
 
   actions: {
-    async getGroupPayload(extra = {}) {
+    /**
+     * Ensure group is ready and build payload
+     */
+    async buildPayload(extra = {}) {
       const groupStore = useGroupPullStore();
 
       const group_nickname = groupStore.setting.group_nickname;
@@ -34,30 +37,43 @@ export const usePlayerStore = defineStore("player", {
       }
 
       return {
-        ...extra,
         group_nickname,
+        ...extra,
       };
     },
 
+    /**
+     * Fetch players list
+     */
     async fetchPlayers(force = false) {
-      this.loading = true;
+      if (this.loaded && !force) return;
 
+      this.loading = true;
       try {
-        const payload = await this.getGroupPayload();
+        const payload = await this.buildPayload();
         if (!payload) return;
 
-        if (this.list.length && !force) return;
-
         const res = await getPlayersApi(payload);
+        const list = res?.data || [];
 
-        this.list = res?.data || [];
-        if (!this.selected && this.list.length) {
-          this.selected = this.list[0];
+        this.list = list;
+        this.loaded = true;
+
+        // keep selection stable
+        if (list.length) {
+          this.selected =
+            this.selected &&
+            list.find((p) => p.playername === this.selected.playername)
+              ? list.find((p) => p.playername === this.selected.playername)
+              : list[0];
+        } else {
+          this.selected = null;
         }
       } catch (err) {
         console.error("[player.store] fetchPlayers failed", err);
         this.list = [];
         this.selected = null;
+        this.loaded = false;
       } finally {
         this.loading = false;
       }
@@ -67,10 +83,17 @@ export const usePlayerStore = defineStore("player", {
       this.selected = this.list.find((p) => p.playername === name) || null;
     },
 
+    clearSelected() {
+      this.selected = null;
+    },
+
+    /**
+     * CRUD operations
+     */
     async createPlayer(form) {
       this.loading = true;
       try {
-        const payload = await this.getGroupPayload(form);
+        const payload = await this.buildPayload(form);
         if (!payload) return;
 
         await createPlayerApi(payload);
@@ -83,11 +106,11 @@ export const usePlayerStore = defineStore("player", {
     async updatePlayer(form) {
       if (!this.selected) return;
 
-      this.loading = true;
       const keepName = this.selected.playername;
+      this.loading = true;
 
       try {
-        const payload = await this.getGroupPayload(form);
+        const payload = await this.buildPayload(form);
         if (!payload) return;
 
         await updatePlayerApi(payload);
@@ -105,7 +128,7 @@ export const usePlayerStore = defineStore("player", {
 
       this.loading = true;
       try {
-        const payload = await this.getGroupPayload({ name });
+        const payload = await this.buildPayload({ name });
         if (!payload) return;
 
         await deletePlayerApi(payload);
@@ -121,7 +144,7 @@ export const usePlayerStore = defineStore("player", {
 
       this.loading = true;
       try {
-        const payload = await this.getGroupPayload({ name });
+        const payload = await this.buildPayload({ name });
         if (!payload) return;
 
         await topPlayerApi(payload);
@@ -137,7 +160,7 @@ export const usePlayerStore = defineStore("player", {
 
       this.loading = true;
       try {
-        const payload = await this.getGroupPayload({ name });
+        const payload = await this.buildPayload({ name });
         if (!payload) return;
 
         await hidePlayerApi(payload);
@@ -147,10 +170,14 @@ export const usePlayerStore = defineStore("player", {
       }
     },
 
+    /**
+     * Reset when group changes
+     */
     resetStore() {
       this.list = [];
       this.selected = null;
       this.loading = false;
+      this.loaded = false;
     },
   },
 });

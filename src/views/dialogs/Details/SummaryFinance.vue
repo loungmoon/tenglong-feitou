@@ -21,8 +21,7 @@
               class="mb-3"
               color="#d17b4d"
               :loading="playerStore.loading"
-              :disabled="playerStore.loading"
-              @click="reset()"
+              @click="reloadPlayers"
             >
               刷新选手
             </v-btn>
@@ -65,7 +64,7 @@
               <v-list-item
                 v-for="p in playerStore.list"
                 :key="p.playername"
-                :active="playerStore.selected?.playername === p.playername"
+                :active="isSelected(p.playername)"
                 color="#0d47a1"
                 @click="selectPlayer(p.playername)"
               >
@@ -160,6 +159,7 @@
 <script setup>
 import { ref, computed, watch } from "vue";
 import { usePlayerStore } from "@/stores/player.store";
+import { useGroupPullStore } from "@/stores/group.store";
 import {
   queryPlayerDetails,
   queryPlayerDetailsByNameShoe,
@@ -168,19 +168,42 @@ import { useNotify } from "@/composables/useNotifiy";
 
 const model = defineModel({ type: Boolean });
 const notify = useNotify();
+
 const playerStore = usePlayerStore();
+const groupStore = useGroupPullStore();
 
 const rows = ref([]);
 const tableMode = ref("normal");
 
 const form = ref({
-  name: "",
   shoe: null,
   round: null,
   startTime: "",
   endTime: "",
   is_contains_virtual: 0,
 });
+
+const groupNickName = computed(() => groupStore.setting.group_nickname);
+const selectedName = computed(() => playerStore.selected?.playername);
+const hasDateRange = computed(() => !!form.value.startTime && !!form.value.endTime);
+
+const queryMode = computed(() => {
+  const { shoe, round } = form.value;
+
+  if (selectedName.value && shoe && round) return "BY_NAME_SHOE_ROUND";
+  if (hasDateRange.value && selectedName.value && !shoe) return "SINGLE";
+  if (hasDateRange.value && shoe && !selectedName.value) return "BY_SHOE";
+  if (hasDateRange.value && !selectedName.value && !shoe) return "ALL";
+
+  return null;
+});
+
+const queryLabel = computed(() => ({
+  SINGLE: "按天查询单个选手",
+  ALL: "按天查询所有选手",
+  BY_SHOE: "按天查某靴所有选手",
+  BY_NAME_SHOE_ROUND: "按天按靴查询单个选手",
+}[queryMode.value] || "查询"));
 
 const headersMap = {
   normal: [
@@ -207,43 +230,24 @@ const headersMap = {
 
 const headers = computed(() => headersMap[tableMode.value]);
 
-const hasDateRange = computed(
-  () => !!form.value.startTime && !!form.value.endTime
-);
-
-const queryMode = computed(() => {
-  const { name, shoe, round } = form.value;
-
-  if (name && shoe && round) return "BY_NAME_SHOE_ROUND";
-  if (hasDateRange.value && name && !shoe) return "SINGLE";
-  if (hasDateRange.value && shoe && !name) return "BY_SHOE";
-  if (hasDateRange.value && !name && !shoe) return "ALL";
-
-  return null;
-});
-
-const queryLabel = computed(() => ({
-  SINGLE: "按天查询单个选手",
-  ALL: "按天查询所有选手",
-  BY_SHOE: "按天查某靴所有选手",
-  BY_NAME_SHOE_ROUND: "按天按靴查询单个选手",
-}[queryMode.value] || "查询"));
-
-watch(model, async (open) => {
-  if (!open) return;
-  await playerStore.fetchPlayers();
-});
+const isSelected = (name) => selectedName.value === name;
 
 const selectPlayer = (name) => {
-  form.value.name = name;
   playerStore.setSelectedByName(name);
 };
 
+const reloadPlayers = async () => {
+  await playerStore.fetchPlayers();
+};
+
 const basePayload = () => ({
+  group_nickname: groupNickName.value,
   startTime: form.value.startTime,
   endTime: form.value.endTime,
   is_contains_virtual: form.value.is_contains_virtual,
 });
+
+
 
 const query = async () => {
   rows.value = [];
@@ -256,7 +260,7 @@ const query = async () => {
         tableMode.value = "normal";
         res = await queryPlayerDetails({
           ...basePayload(),
-          name: form.value.name,
+          name: selectedName.value,
         });
         break;
 
@@ -277,7 +281,7 @@ const query = async () => {
         tableMode.value = "byNameShoe";
         res = await queryPlayerDetailsByNameShoe({
           ...basePayload(),
-          name: form.value.name,
+          name: selectedName.value,
           shoe: form.value.shoe,
           round: form.value.round,
         });
@@ -287,9 +291,8 @@ const query = async () => {
         notify.error("查询条件不完整");
         return;
     }
-
+     rows.value = res.data || [];
     notify.success(res.msg);
-    rows.value = res.data || [];
   } catch (err) {
     console.error(err);
     notify.error("查询失败");
@@ -299,17 +302,24 @@ const query = async () => {
 const reset = () => {
   rows.value = [];
   form.value = {
-    name: "",
     shoe: null,
     round: null,
     startTime: "",
     endTime: "",
     is_contains_virtual: 0,
   };
-  playerStore.selected = null;
+   playerStore.clearSelected();
 };
 
 const close = () => {
   model.value = false;
 };
+
+watch(model, async (open)=>{
+  if(!open) {
+    reset();
+    return;
+  }
+  await reloadPlayers();
+})
 </script>

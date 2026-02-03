@@ -17,8 +17,9 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref,computed } from "vue";
 import BaseDialog from "@/components/common/BaseDialog.vue";
+import { useGroupPullStore } from "@/stores/group.store";
 import { proceedNextShoeApi } from "@/api/opt.api";
 import { useNotify } from "@/composables/useNotifiy";
 
@@ -35,11 +36,21 @@ const emit = defineEmits(["success"]);
 
 const loading = ref(false);
 const notify = useNotify();
+const groupStore = useGroupPullStore();
+
+const groupNickName = computed(
+  ()=> groupStore.setting.group_nickname
+)
 
 const confirm = async () => {
   loading.value = true;
+
+  if(!groupNickName.value){
+    return;
+  }
   try {
     const res = await proceedNextShoeApi({
+      group_nickname: groupNickName.value,
       desk_number: deskNumber,
     });
 

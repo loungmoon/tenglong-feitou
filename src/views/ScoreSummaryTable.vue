@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed,watch } from "vue";
+import { ref,computed,watch,onMounted } from "vue";
 import { getPlayerScoreDataApi } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
 import { useGroupPullStore } from "@/stores/group.store";
@@ -49,12 +49,12 @@ const uiStore = useUiStore();
 
 const betScoreRef = ref(null);
 const loading = ref(false);
+const items = ref([]);
 
 const players = computed(() => playStore.userList);
+const groupNickName = computed(() => grpupStore.setting.group_nickname)
 const shoe = computed(() => resultStore.info.shoe);
 const round = computed(() => resultStore.info.round);
-
-const items = ref([]);
 
 const headers = [
   { title: "姓名", key: "name", align: "center" },
@@ -66,13 +66,16 @@ const headers = [
 ];
 
 const fetchScoreData = async () => {
-  if (!players.value.length || !shoe.value || !round.value) return;
+  if (!groupNickName.value || !shoe.value || !round.value || !players.value.length ) {
+    items.value = [];
+    return;
+  };
 
   loading.value = true;
 
   try {
     const res = await getPlayerScoreDataApi({
-      group_nickname: grpupStore.setting.group_nickname,
+      group_nickname: groupNickName.value,
       shoe: shoe.value,
       round: round.value,
     });
@@ -122,6 +125,13 @@ const fetchScoreData = async () => {
     loading.value = false;
   }
 };
+
+watch(
+  [groupNickName, shoe , round],
+  () => {
+    items.value = [];
+  } 
+)
 
 watch(
   () => [

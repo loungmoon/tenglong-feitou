@@ -31,37 +31,41 @@
 </template>
 
 <script setup>
-import { onMounted ,watch, ref } from "vue";
+import { watch } from "vue";
 import AppNavbar from "@/components/layout/AppNavbar.vue";
 import Dashbord from "@/views/Dashboard.vue"
 import AppControlPanel from "@/components/layout/control-panel/ControlPanel.vue";
 import DialogContainer from "@/components/dialogs/DialogContainer.vue";
+import menus from '@/config/menus'
+
 import { useDialogStore } from "@/stores/dialog.store";
-import { useResultSettingStore } from "@/stores/resultsetting.store";
 import { useGroupPullStore } from "@/stores/group.store";
 import { usePlayerStore } from "@/stores/player.store";
+import { useResultSettingStore } from "@/stores/resultsetting.store";
 
-import menus from '@/config/menus'
 
 const dialog = useDialogStore();
 const groupStore = useGroupPullStore();
-const resultstore = useResultSettingStore();
 const playerStore = usePlayerStore();
+const resultstore = useResultSettingStore();
 
-const groupReady = ref(false);
+groupStore.ensureReady();
 
-onMounted(async () => {
-  await groupStore.ensureReady()
-  groupReady.value = true;
+watch(
+  () => groupStore.isReady,
+  async (ready) => {
+    if (!ready) return;
 
-  await resultstore.fetchSetting()
-  await resultstore.getDeskInfo()
-});
+    await resultstore.fetchSetting();
+    await resultstore.getDeskInfo();
+  },
+  { immediate: true }
+);
 
 watch(
   () => groupStore.setting.group_nickname,
   async (newVal, oldVal) => {
-    if (!groupReady.value) return;
+    if (!groupStore.isReady) return;
     if (!newVal || newVal === oldVal) return;
 
     playerStore.resetStore();

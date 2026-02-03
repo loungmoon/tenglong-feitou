@@ -4,7 +4,7 @@
 
     <DeskInfoResultPanel />
 
-    <!-- <CurrentTable /> -->
+    <CurrentTable />
     <BottomActions  />
   </v-container>
 </template>
@@ -13,7 +13,7 @@
 
 import ActionPlayerPanel from "./ActionPlayerPanel.vue";
 import DeskInfoResultPanel from "./DeskInfoResultPanel.vue";
-// import CurrentTable from "./CurrentTable.vue";
+import CurrentTable from "./CurrentTable.vue";
 import BottomActions from "./BottomActions.vue";
 
 

@@ -31,10 +31,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import BaseDialog from "@/components/common/BaseDialog.vue";
 import { editShoeApi } from "@/api/opt.api";
 import { useNotify } from "@/composables/useNotifiy";
+import { useGroupPullStore } from "@/stores/group.store";
 
 const model = defineModel({ type: Boolean });
 
@@ -57,6 +58,8 @@ const emit = defineEmits(["success"]);
 
 const loading = ref(false);
 const notify = useNotify();
+const groupStore = useGroupPullStore();
+const groupNickName = computed(() => groupStore.setting.group_nickname);
 
 const localForm = ref({
   deskNumber: null,
@@ -74,21 +77,28 @@ watch(
   }
 )
 
+
 const confirm = async () => {
+  if (loading.value) return;
+
   if (!localForm.value.shoe || !localForm.value.round) {
     notify.error("请输入靴号和局号");
     return;
   }
+
+  if (!groupNickName.value) return;
+
   loading.value = true;
   try {
     const res = await editShoeApi({
       desk_number: Number(localForm.value.deskNumber),
       shoe: Number(localForm.value.shoe),
       round: Number(localForm.value.round),
+      group_nickname: groupNickName.value
     });
 
     notify.success(res.msg);
-    emit("success", res.data);
+    emit("success", res.data || null);
     model.value = false;
   } catch (err) {
     notify.error(err);

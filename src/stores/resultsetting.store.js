@@ -8,7 +8,7 @@ import { useGroupPullStore } from "@/stores/group.store";
 
 export const useResultSettingStore = defineStore("resultSetting", {
   state: () => ({
-    loaded: false, // 👈 important: first time only
+    loaded: false,
     loading: false,
     setting: {
       active: false,
@@ -23,10 +23,16 @@ export const useResultSettingStore = defineStore("resultSetting", {
   }),
 
   actions: {
-    async getGroupNickname() {
+    getGroupNickname() {
       const groupStore = useGroupPullStore();
-      await groupStore.ensureReady();
-      return groupStore.setting.group_nickname;
+      const group_nickname = groupStore.setting.group_nickname;
+
+      if (!group_nickname) {
+        console.warn("[resultSetting.store] Missing group_nickname");
+        return null;
+      }
+
+      return group_nickname;
     },
 
     async ensureReady() {
@@ -35,11 +41,14 @@ export const useResultSettingStore = defineStore("resultSetting", {
     },
 
     async fetchSetting() {
+      if (this.loaded) return;
+
       this.loading = true;
       try {
-        const group_nickname = await this.getGroupNickname();
+        const group_nickname = this.getGroupNickname();
+        if(!group_nickname) return;
 
-         const { data } = await getLotteryResultApi({
+        const { data } = await getLotteryResultApi({
           group_nickname,
         });
 
@@ -59,7 +68,9 @@ export const useResultSettingStore = defineStore("resultSetting", {
     async saveSetting(form) {
       this.loading = true;
       try {
-         const group_nickname = await this.getGroupNickname();
+        const group_nickname = this.getGroupNickname();
+        if (!group_nickname) return;
+
         await setLotteryResultApi({
           group_nickname,
           active: form.active ? 1 : 0,
@@ -68,8 +79,8 @@ export const useResultSettingStore = defineStore("resultSetting", {
           auto_result_report: form.auto_result_report ? 1 : 0,
         });
 
-        // sync store after save
         this.setting = { ...form };
+        this.loaded = true;
       } finally {
         this.loading = false;
       }
@@ -77,17 +88,17 @@ export const useResultSettingStore = defineStore("resultSetting", {
 
     async getDeskInfo() {
       await this.ensureReady();
-      
-      const deskNumber = this.setting.desk_number;
 
+      const deskNumber = this.setting.desk_number;
       if (!deskNumber) return;
+
       const { data } = await deskInfo({
         desk_number: deskNumber,
       });
 
       this.info = {
-        shoe: data.shoe,
-        round: data.round,
+        shoe: data?.shoe ?? null,
+        round: data?.round ?? null,
       };
     },
 

@@ -42,9 +42,12 @@ import BaseDialog from "@/components/common/BaseDialog.vue"
 import { editDeskNickname } from "@/api/system.api"
 import { useNotify } from "@/composables/useNotifiy"
 import { useResultSettingStore } from "@/stores/resultsetting.store"
+import { useGroupPullStore } from "@/stores/group.store";
 
 const notify = useNotify()
 const store = useResultSettingStore()
+
+const groupStore = useGroupPullStore();
 
 /* dialog model */
 const visible = defineModel({ type: Boolean })
@@ -55,6 +58,7 @@ const newNickname = ref("")
 const formRef = ref(null)
 
 const deskNumber = computed(() => store.setting.desk_number)
+const groupNickName = computed(() => groupStore.setting.group_nickname);
 
 const newNicknameRules = computed(() => [
   v => !!v || "请输入新台号昵称",
@@ -71,18 +75,21 @@ watch(visible, (open) => {
 
 /* submit */
 const handleConfirm = async () => {
-  if (loading.value) return
+  if (loading.value) return;
+
+  if (!groupNickName.value) return;
 
   const { valid } = await formRef.value.validate()
   if (!valid) return
   loading.value = true
   try {
-    await editDeskNickname({
+    const res =await editDeskNickname({
       old_desk_nickname: deskNumber.value,
       new_desk_nickname: newNickname.value,
+      group_nickname: groupNickName.value,
     })
 
-    notify.success("台号昵称修改成功")
+    notify.success(res.msg)
     visible.value = false
   } catch (err) {
     notify.error(err?.message || "修改失败，请稍后再试")

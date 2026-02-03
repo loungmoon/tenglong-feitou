@@ -1,7 +1,7 @@
 import api from "@/utils/request"
 
-export const proceedNextShoeApi = () => {
-  return api.post('/opt/proceed_next_shoe')
+export const proceedNextShoeApi = (data) => {
+  return api.post('/opt/proceed_next_shoe',data)
 }
 
 export const nextRoundApi = (data) =>{
