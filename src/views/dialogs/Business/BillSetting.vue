@@ -146,7 +146,7 @@
               <v-card-actions class="justify-center mt-6">
                 <v-btn
                   variant="flat"
-                  color="blue"
+                  color="primary"
                   :loading="loading"
                   @click="save"
                 >
@@ -164,7 +164,7 @@
 <script setup>
 import { ref, watch, computed } from "vue";
 import { usePlayerStore } from "@/stores/player.store";
-import { useGroupPullStore } from "@/stores/group.store"
+import { useGroupPullStore } from "@/stores/group.store";
 import { setPersonalParameter, getPersonalParameter } from "@/api/system.api";
 import { useNotify } from "@/composables/useNotifiy";
 import NumberField from "@/components/common/NumberField.vue";
@@ -178,27 +178,32 @@ const notify = useNotify();
 const loading = ref(false);
 const formRef = ref(null);
 const isValid = ref(false);
-
 const localPlayerName = ref("");
-const groupNickname = computed(()=> groupStore.setting.group_nickname)
+
+const groupNickname = computed(()=> groupStore.setting.group_nickname);
 
 /* form */
-const form = ref({
+const createForm  = () => ({
   bp_personal_share: null,
   bp_personal_share_upperlimit: null,
   sb_personal_share: null,
   personal_points_redemption_ratio: null,
+
   bp_personal_upperlimit: null,
   sb_personal_upperlimit: null,
   lucky6_personal_upperlimit: null,
   perfect_pair_upperlimit: null,
+
   zoom_ratio: null,
 });
 
+const form = ref(createForm());
+
+const extractPayload = (res) => res?.data?.data ?? null;
+
 const fetchPersonalParameter = async () =>{
-   if (!model.value) return;             
-  if (!localPlayerName.value) return;
-  if (!groupNickname.value) return;
+   if (!groupNickname.value || !localPlayerName.value) return;
+   if (loading.value) return;
 
   loading.value = true;
   try {
@@ -207,7 +212,15 @@ const fetchPersonalParameter = async () =>{
       player_name : localPlayerName.value
     });
 
-    Object.assign(form.value, res.data || {});
+   const payload =  extractPayload(res);
+   const record = Array.isArray(payload) ? payload[0] : payload;
+
+     if (!record  || Object.keys(record ).length === 0) {
+      Object.assign(form.value, createForm());
+      return;
+    }
+
+    Object.assign(form.value, createForm(), record);
   } catch (err) {
      notify.error(err || "获取个人参数失败");
   }finally{
@@ -225,12 +238,11 @@ watch(model, async (open) => {
   localPlayerName.value =
     playerStore.selected?.playername || playerStore.list?.[0]?.playername || "";
 
-  if (localPlayerName.value) {
-    await fetchPersonalParameter();
-  }
+  await fetchPersonalParameter();
 });
 
 const selectPlayer = async (name) => {
+   if (localPlayerName.value === name) return;
   localPlayerName.value = name;
   await fetchPersonalParameter();
 };
@@ -246,10 +258,14 @@ const save = async () => {
 
   loading.value = true;
   try {
+    const payload = Object.fromEntries(
+      Object.entries(form.value).filter(([, v]) => v !== null)
+    );
+
     await setPersonalParameter({
-      ...form.value,
       group_nickname: groupNickname.value,
       player_name: localPlayerName.value,
+      ...payload,
     });
     notify.success("修改选手成功");
     model.value = false;

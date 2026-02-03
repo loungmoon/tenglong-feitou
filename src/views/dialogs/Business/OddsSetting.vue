@@ -364,7 +364,7 @@ const isValid = ref(false);
 
 const groupNickname = computed(()=> groupStore.setting.group_nickname)
 
-const form = ref({
+const defaultForm  = () => ({
   banker_odds: null,
   tie_odds: null,
   lucky_6_2_odds: null,
@@ -410,6 +410,8 @@ const form = ref({
   transfer_small_change: 0,
 });
 
+const form = ref(defaultForm());
+
 const fetchParameter = async () =>{
   if(!groupNickname.value ) return
 
@@ -419,7 +421,14 @@ const fetchParameter = async () =>{
       group_nickname : groupNickname.value,
     });
 
-    Object.assign(form.value, res.data || {});
+     const payload = res?.data?.[0];
+     console.log("payload",payload)
+
+      if (payload) {
+      Object.assign(form.value, defaultForm(), payload);
+    }
+
+    // Object.assign(form.value, res.data || {});
   } catch (err) {
      notify.error(err || "获取个人参数失败");
   }finally{
@@ -441,6 +450,7 @@ const confirm = async () => {
   loading.value = true;
   try {
     await setParameter({
+      group_nickname : groupNickname.value,
       ...form.value,
     });
     notify.success("修改选手成功");
