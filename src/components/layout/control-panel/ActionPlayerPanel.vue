@@ -23,7 +23,7 @@
               <v-list-item
                 v-for="p in playerStore.list"
                 :key="p.playername"
-                color="#0d47a1"
+                color="primary"
                 :active="playerStore.selected?.playername === p.playername"
                 @click="selectPlayer(p.playername)"
               >

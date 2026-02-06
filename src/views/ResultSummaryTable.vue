@@ -183,7 +183,7 @@ const rowProps = ({ item }) => {
 }
 
 .desktop-table :deep(th:nth-child(n + 2)) {
-  background-color: #0d47a1;
+  background-color: rgba(var(--v-theme-primary));
   color: white;
   font-weight: bold;
 }

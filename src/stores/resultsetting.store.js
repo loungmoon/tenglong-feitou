@@ -1,3 +1,4 @@
+//stores/resultsetting.store.js
 import { defineStore } from "pinia";
 import {
   getLotteryResultApi,
@@ -5,6 +6,19 @@ import {
   deskInfo,
 } from "@/api/system.api";
 import { useGroupPullStore } from "@/stores/group.store";
+import {
+  parseGameHistory,
+  buildBigRoad,
+  normalizeBigRoad,
+  buildBeadRoad,
+} from "@/composables/useBigRoad";
+
+import { DerivedRoad } from "@/composables/DerivedRoad";
+import { buildDerivedBigRoad } from "@/composables/useDerivedRoadGrid";
+
+const bigEyeEval = new DerivedRoad(1)
+const smallEval = new DerivedRoad(2)
+const cockroachEval = new DerivedRoad(3)
 
 export const useResultSettingStore = defineStore("resultSetting", {
   state: () => ({
@@ -19,20 +33,49 @@ export const useResultSettingStore = defineStore("resultSetting", {
     info: {
       shoe: null,
       round: null,
+      gameHistory: "",
     },
   }),
+
+  getters: {
+    values(state) {
+      if (!state.info.gameHistory) return [];
+      const values = parseGameHistory(state.info.gameHistory);
+      return values;
+    },
+
+    rawBigRoad() {
+      return this.values.length ? buildBigRoad(this.values) : [];
+    },
+
+    bigRoad() {
+      return this.values.length ? normalizeBigRoad(this.rawBigRoad) : [];
+    },
+
+    beadRoad() {
+      return buildBeadRoad(this.values);
+    },
+
+    bigEyeRoadRaw() {
+      const flat = bigEyeEval.evaluate(this.rawBigRoad)
+      return buildDerivedBigRoad(flat, 6)
+    },
+
+    smallRoadRaw() {
+      const flat = smallEval.evaluate(this.rawBigRoad)
+      return buildDerivedBigRoad(flat, 6)
+    },
+
+    cockroachRoadRaw() {
+      const flat = cockroachEval.evaluate(this.rawBigRoad)
+      return buildDerivedBigRoad(flat, 6)
+    },
+  },
 
   actions: {
     getGroupNickname() {
       const groupStore = useGroupPullStore();
-      const group_nickname = groupStore.setting.group_nickname;
-
-      if (!group_nickname) {
-        console.warn("[resultSetting.store] Missing group_nickname");
-        return null;
-      }
-
-      return group_nickname;
+      return groupStore.setting.group_nickname || null;
     },
 
     async ensureReady() {
@@ -46,7 +89,7 @@ export const useResultSettingStore = defineStore("resultSetting", {
       this.loading = true;
       try {
         const group_nickname = this.getGroupNickname();
-        if(!group_nickname) return;
+        if (!group_nickname) return;
 
         const { data } = await getLotteryResultApi({
           group_nickname,
@@ -97,20 +140,28 @@ export const useResultSettingStore = defineStore("resultSetting", {
       });
 
       this.info = {
+        ...this.info,
         shoe: data?.shoe ?? null,
         round: data?.round ?? null,
+        gameHistory: data?.gameHistory ?? this.info.gameHistory
       };
     },
 
     reset() {
       this.loaded = false;
+      this.loading = false;
+
       this.setting = {
         active: false,
         official_website_nickname: "",
         desk_number: "",
         auto_result_report: false,
       };
-      this.info = { shoe: null, round: null };
+      this.info = {
+        shoe: null,
+        round: null,
+        gameHistory:"",
+      };
     },
   },
 });

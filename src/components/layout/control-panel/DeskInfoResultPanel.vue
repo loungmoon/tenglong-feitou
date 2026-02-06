@@ -9,7 +9,7 @@
           </v-card>
         </v-col>
 
-        <v-col cols="8" class="text-right text-[#0d47a1]">
+        <v-col cols="8" class="text-right text-primary">
           <div>选手名称</div>
           <div>代理名称</div>
           <div>初始积分</div>
@@ -22,35 +22,38 @@
         <span>总输: 1</span>
       </v-row>
 
-      <div class="text-center text-[#0d47a1] my-5">
+      <div class="text-center text-primary my-5">
         <div>非虚拟剩余分汇总: 59285</div>
         <div>非虚拟初始分汇总: 80400</div>
       </div>
 
       <v-row class="d-flex justify-between" dense>
-        <v-col cols="12" md="3">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="form.shoe"
             label="靴"
             density="compact"
+            variant="outlined"
             hide-details
           />
         </v-col>
 
-        <v-col cols="12" md="3">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="form.round"
             label="局"
             density="compact"
+            variant="outlined"
             hide-details
           />
         </v-col>
 
-        <v-col cols="12" md="3">
+        <v-col cols="12" md="4">
           <v-text-field
             v-model="deskNumber"
             label="台号"
             density="compact"
+            variant="outlined"
             hide-details
           />
         </v-col>
@@ -58,27 +61,52 @@
 
       <v-row dense class="mt-4">
         <v-col cols="4">
-          <v-btn block size="small" color="grey" @click="dlgNextShoe = true"
+          <v-btn
+            block
+            size="small"
+            color="primary"
+            variant="tonal"
+            @click="dlgNextShoe = true"
             >进入下一靴</v-btn
           >
         </v-col>
         <v-col cols="4">
-          <v-btn block size="small" color="grey" @click="dlgNextRound = true"
+          <v-btn
+            block
+            size="small"
+            color="primary"
+            variant="tonal"
+            @click="dlgNextRound = true"
             >开始下注</v-btn
           >
         </v-col>
         <v-col cols="4">
-          <v-btn block size="small" color="grey" @click="dlgEditShoe = true"
+          <v-btn
+            block
+            size="small"
+            color="primary"
+            variant="tonal"
+            @click="dlgEditShoe = true"
             >修改靴局</v-btn
           >
         </v-col>
         <v-col cols="6">
-          <v-btn block size="small" color="grey" @click="dlgLock = true"
+          <v-btn
+            block
+            size="small"
+            color="primary"
+            variant="tonal"
+            @click="dlgLock = true"
             >锁定靴局</v-btn
           >
         </v-col>
         <v-col cols="6">
-          <v-btn block size="small" color="grey" @click="dlgLast = true"
+          <v-btn
+            block
+            size="small"
+            color="primary"
+            variant="tonal"
+            @click="dlgLast = true"
             >最近一局</v-btn
           >
         </v-col>
@@ -90,18 +118,13 @@
   <v-card class="mb-2" elevation="5">
     <v-card-title class="d-flex align-center justify-space-between">
       <span>开奖区</span>
-      <v-checkbox
-        v-model="disabled"
-        label="关闭"
-        density="compact"
-        hide-details
-      />
     </v-card-title>
 
     <v-card-text>
       <v-btn-toggle
         v-model="mainResult"
         divided
+        variant="outlined"
         density="comfortable"
         class="w-100 mb-3"
       >
@@ -113,28 +136,69 @@
       </v-btn-toggle>
 
       <v-row dense>
-        <v-col cols="6">
+        <v-col cols="4">
           <v-checkbox
             v-model="bankerPair"
             label="庄对"
             density="compact"
             hide-details
-            color="#fff"
-            class="bg-error rounded pa-1"
+            color="primary"
+            class="border border-primary rounded pa-1"
           />
         </v-col>
 
-        <v-col cols="6">
+        <v-col cols="4">
           <v-checkbox
             v-model="playerPair"
             label="闲对"
             density="compact"
             hide-details
-            color="#ffffff"
-            class="bg-blue rounded pa-1"
+            color="primary"
+            class="border border-primary rounded pa-1"
+          />
+        </v-col>
+
+        <v-col cols="4">
+          <v-checkbox
+            v-model="anyPair"
+            label="任意对"
+            density="compact"
+            hide-details
+            class="border border-primary rounded pa-1"
           />
         </v-col>
       </v-row>
+      <v-row dense class="mt-2">
+        <v-col cols="4">
+          <v-checkbox
+            v-model="lucky6_2"
+            label="幸运6（2点）"
+            density="compact"
+            hide-details
+            class="border border-primary rounded pa-1"
+          />
+        </v-col>
+
+        <v-col cols="4">
+          <v-checkbox
+            v-model="lucky6_3"
+            label="幸运6（3点）"
+            density="compact"
+            hide-details
+            class="border border-primary rounded pa-1"
+          />
+        </v-col>
+        <v-col cols="4">
+          <v-checkbox
+            v-model="perfect"
+            label="完美"
+            density="compact"
+            hide-details
+            class="border border-primary rounded pa-1"
+          />
+        </v-col>
+      </v-row>
+
       <v-btn
         block
         :loading="loading"
@@ -188,6 +252,7 @@ import {
 
 const notify = useNotify();
 const store = useResultSettingStore();
+const groupStore = useGroupPullStore();
 
 const dlgNextShoe = ref(false);
 const dlgNextRound = ref(false);
@@ -196,15 +261,32 @@ const dlgLock = ref(false);
 const dlgLast = ref(false);
 
 const loading = ref(false);
-const disabled = ref(false);
-
-const groupStore = useGroupPullStore();
-const groupNickName = computed(() => groupStore.setting.group_nickname);
+const disabled = ref(true);
 
 const form = ref({
   shoe: null,
   round: null,
 });
+
+const mainResult = ref(null);
+
+const bankerPair = ref(false);
+const playerPair = ref(false);
+const lucky6_2 = ref(false);
+const lucky6_3 = ref(false);
+const perfect = ref(false);
+const anyPair = ref(false);
+
+const hasMainResult = computed(() => !!mainResult.value);
+
+const deskNumber = computed({
+  get: () => store.setting.desk_number,
+  set: (val) => {
+    store.setting.desk_number = val;
+  },
+});
+
+const groupNickName = computed(() => groupStore.setting.group_nickname);
 
 watch(
   () => store.info,
@@ -215,25 +297,31 @@ watch(
   { immediate: true },
 );
 
-const deskNumber = computed({
-  get: () => store.setting.desk_number,
-  set: (val) => {
-    store.setting.desk_number = val;
-  },
+watch(mainResult, (val) => {
+  if (!val) {
+    bankerPair.value = false;
+    playerPair.value = false;
+    lucky6_2.value = false;
+    lucky6_3.value = false;
+    perfect.value = false;
+    anyPair.value = false;
+  }
 });
 
-const mainResult = ref(null);
-const bankerPair = ref(false);
-const playerPair = ref(false);
-
 const resultCode = computed(() => {
+  if (!mainResult.value) return 0;
   let sum = 0;
 
   if (mainResult.value === "banker") sum += 1;
   if (mainResult.value === "player") sum += 2;
   if (mainResult.value === "tie") sum += 4;
+
   if (bankerPair.value) sum += 8;
   if (playerPair.value) sum += 16;
+  if (lucky6_2.value) sum += 32;
+  if (lucky6_3.value) sum += 64;
+  if (perfect.value) sum += 128;
+  if (anyPair.value) sum += 256;
 
   return sum;
 });
@@ -242,12 +330,17 @@ const refreshDesk = async () => {
   mainResult.value = null;
   bankerPair.value = false;
   playerPair.value = false;
+  lucky6_2.value = false;
+  lucky6_3.value = false;
+  perfect.value = false;
+  anyPair.value = false;
   await store.getDeskInfo();
 };
 
 const handleNextRound = async (data) => {
   form.value.round = Number(data.round);
   form.value.shoe = Number(data.shos);
+  disabled.value = false;
   await refreshDesk();
 };
 
@@ -264,11 +357,8 @@ const submitResult = async () => {
     return;
   }
 
-  const hasMain = !!mainResult.value;
-  const hasPair = bankerPair.value || playerPair.value;
-
-  if (!hasMain && !hasPair) {
-    notify.error("请选择庄 / 闲 / 和（或对子）");
+  if (!hasMainResult.value) {
+    notify.error("必须选择 庄 / 闲 / 和");
     return;
   }
 
@@ -277,14 +367,14 @@ const submitResult = async () => {
     shoe: Number(form.value.shoe),
     round: Number(form.value.round),
     result: resultCode.value,
-    group_nickname: groupNickName.value
+    group_nickname: groupNickName.value,
   };
 
   loading.value = true;
   try {
     await drawLotteryApi(payload);
     notify.success("开奖成功");
-
+    disabled.value = true;
     await refreshDesk();
   } catch (err) {
     console.error(err);

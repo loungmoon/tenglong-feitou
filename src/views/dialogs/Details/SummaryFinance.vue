@@ -65,7 +65,7 @@
                 v-for="p in playerStore.list"
                 :key="p.playername"
                 :active="isSelected(p.playername)"
-                color="#0d47a1"
+                color="primary"
                 @click="selectPlayer(p.playername)"
               >
                 <template #prepend>

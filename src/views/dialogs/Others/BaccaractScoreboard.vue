@@ -19,56 +19,26 @@
       <v-divider />
 
       <v-card-text class="pa-5 h-100 table-bg">
-        <!-- Big Road -->
-        <BigRoadBoard :columns="bigRoadVisual" />
-
-        <!-- Big Eye -->
-        <div class="derived-row full mt-2">
-          <DerivedRoadBoard
-            title="Big Eye"
-            :board="bigEye.board.value"
-            variant="dot"
-          />
-        </div>
-
-        <!-- Small + Cockroach -->
-        <div class="derived-row">
-          <DerivedRoadBoard
-            title="Small"
-            :board="small.board.value"
-            variant="ring"
-            :cols="19"
-          />
-          <DerivedRoadBoard
-            title="Cockroach"
-            :board="cockroach.board.value"
-            variant="slash"
-            :cols="19"
-          />
-        </div>
-
-    
-
-        <v-row >
-          <!-- LEFT: ROADS -->
-               <!-- Bead Road -->
+        <v-row dense class="mb-1">
           <v-col cols="6">
-            <BeadRoad :results="results" class="mt-1" />
+            <BeadRoad :road="store.beadRoad" />
           </v-col>
+          <v-col cols="6"> </v-col>
+        </v-row>
+        <!-- Big Road -->
+        <BigRoad :road="store.bigRoad" class="mb-1"/>
 
-          <!-- RIGHT: STATS -->
-          <v-col cols="6" class="d-flex flex-row ga-2 mt-1">
-            <StatsCard title="Today" :stats="todayStats" color="red-darken-2" />
-            <StatsCard
-              title="Yesterday"
-              :stats="todayStats"
-              color="blue-darken-2"
-            />
-            <StatsCard
-              title="Before"
-              :stats="todayStats"
-              color="green-darken-2"
-            />
+        <DerivedRoadBoard
+          :road="store.bigEyeRoadRaw" 
+          type="bigEye"
+        />
+
+        <v-row dense class="mt-1">
+          <v-col cols="6">
+           <DerivedRoadBoard :road="store.smallRoadRaw"  type="small" />
+          </v-col>
+          <v-col cols="6">
+             <DerivedRoadBoard :road="store.cockroachRoadRaw"  type="cockroach" />
           </v-col>
         </v-row>
       </v-card-text>
@@ -77,95 +47,10 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
-import { BigRoad } from "@/logic/BigRoad";
-import { useDerivedRoad } from "@/logic/useDerivedRoad";
-import { useBaccaratStats } from "@/logic/useBaccaratStats";
-
-import BigRoadBoard from "@/components/baccarat/BigRoadBoard.vue";
+import { useResultSettingStore } from "@/stores/resultsetting.store";
+import BigRoad from "@/components/baccarat/BigRoad.vue";
+import BeadRoad from "@/components/baccarat/BeadRoad.vue";
 import DerivedRoadBoard from "@/components/baccarat/DerivedRoadBoard.vue";
-import BeadRoad from "@/components/baccarat/BeadRoadBoard.vue";
-import StatsCard from "@/components/baccarat/StatsCard.vue";
 const model = defineModel({ type: Boolean });
-
-/* -----------------------------
-   Game Results
------------------------------ */
-const results = ref([
-  "P",
-  "P",
-  "P",
-  "B",
-  "PP",
-  "BPP",
-  "T",
-  "P",
-  "BP",
-  "B",
-  "B",
-  "P",
-  "T",
-  "B",
-  "B",
-  "B",
-  "P",
-  "T"
-]);
-
-/* -----------------------------
-   Big Road
------------------------------ */
-const bigRoad = new BigRoad(6);
-
-const bigRoadVisual = ref([]);
-const bigRoadLogical = ref([]);
-
-const { stats: todayStats } = useBaccaratStats(results);
-
-watch(
-  results,
-  (val) => {
-    bigRoad.init(val);
-
-    // force Vue reactivity
-    bigRoadVisual.value = bigRoad.columns.map((col) =>
-      col ? col.map((cell) => ({ ...cell })) : [],
-    );
-
-    bigRoadLogical.value = bigRoad.logicalColumns.map((col) => [...col]);
-  },
-  { immediate: true },
-);
-
-/* -----------------------------
-   Derived Roads
------------------------------ */
-const bigEye = useDerivedRoad({ step: 1 });
-const small = useDerivedRoad({ step: 2 });
-const cockroach = useDerivedRoad({ step: 3 });
-
-watch(
-  bigRoadLogical,
-  (val) => {
-    bigEye.update(val);
-    small.update(val);
-    cockroach.update(val);
-  },
-  { immediate: true },
-);
+const store = useResultSettingStore();
 </script>
-
-<style scoped>
-.table-bg {
-  background: #1e3a8a; /* casino green */
-}
-
-.derived-row {
-  display: flex;
-  gap: 8px;
-}
-
-.full {
-  margin-bottom: 6px;
-}
-</style>

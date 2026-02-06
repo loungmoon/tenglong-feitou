@@ -1,3 +1,4 @@
+<!-- views/Dashboard.vue -->
 <template>
   <ResultSummaryTable />
   <ScoreSummaryTable />

@@ -16,6 +16,13 @@ export const vuetify = createVuetify({
   },
   theme: {
      defaultTheme: "light",
+     themes: {
+      light: {
+        colors: {
+          primary: '#0d47a1', // 👈 your primary color
+        },
+      },
+    }
   },
   icons: {
     defaultSet: "mdi",
