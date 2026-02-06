@@ -9,16 +9,16 @@ import { useGroupPullStore } from "@/stores/group.store";
 import {
   parseGameHistory,
   buildBigRoad,
-  normalizeBigRoad,
   buildBeadRoad,
+  buildLogicalBigRoad,
 } from "@/composables/useBigRoad";
 
 import { DerivedRoad } from "@/composables/DerivedRoad";
 import { buildDerivedBigRoad } from "@/composables/useDerivedRoadGrid";
 
-const bigEyeEval = new DerivedRoad(1)
-const smallEval = new DerivedRoad(2)
-const cockroachEval = new DerivedRoad(3)
+const bigEyeEval = new DerivedRoad(1);
+const smallEval = new DerivedRoad(2);
+const cockroachEval = new DerivedRoad(3);
 
 export const useResultSettingStore = defineStore("resultSetting", {
   state: () => ({
@@ -45,11 +45,11 @@ export const useResultSettingStore = defineStore("resultSetting", {
     },
 
     rawBigRoad() {
-      return this.values.length ? buildBigRoad(this.values) : [];
+      return this.values.length ? buildLogicalBigRoad(this.values) : [];
     },
 
     bigRoad() {
-      return this.values.length ? normalizeBigRoad(this.rawBigRoad) : [];
+      return this.values.length ? buildBigRoad(this.values) : [];
     },
 
     beadRoad() {
@@ -57,18 +57,18 @@ export const useResultSettingStore = defineStore("resultSetting", {
     },
 
     bigEyeRoadRaw() {
-      const flat = bigEyeEval.evaluate(this.rawBigRoad)
-      return buildDerivedBigRoad(flat, 6)
+      const flat = bigEyeEval.evaluate(this.rawBigRoad);
+      return buildDerivedBigRoad(flat, 6);
     },
 
     smallRoadRaw() {
-      const flat = smallEval.evaluate(this.rawBigRoad)
-      return buildDerivedBigRoad(flat, 6)
+      const flat = smallEval.evaluate(this.rawBigRoad);
+      return buildDerivedBigRoad(flat, 6);
     },
 
     cockroachRoadRaw() {
-      const flat = cockroachEval.evaluate(this.rawBigRoad)
-      return buildDerivedBigRoad(flat, 6)
+      const flat = cockroachEval.evaluate(this.rawBigRoad);
+      return buildDerivedBigRoad(flat, 6);
     },
   },
 
@@ -143,7 +143,7 @@ export const useResultSettingStore = defineStore("resultSetting", {
         ...this.info,
         shoe: data?.shoe ?? null,
         round: data?.round ?? null,
-        gameHistory: data?.gameHistory ?? this.info.gameHistory
+        gameHistory: data?.gameHistory ?? this.info.gameHistory,
       };
     },
 
@@ -160,7 +160,7 @@ export const useResultSettingStore = defineStore("resultSetting", {
       this.info = {
         shoe: null,
         round: null,
-        gameHistory:"",
+        gameHistory: "",
       };
     },
   },

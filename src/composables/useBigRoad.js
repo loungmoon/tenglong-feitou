@@ -48,12 +48,12 @@ export function buildBigRoad(values) {
   let col = 0;
   let row = 0;
   let lastMain = null;
-  let baseCol = 0;
+  let startCol = 0;
 
   for (const value of values) {
     const cell = createCell(value);
 
-    // 🟢 Tie → attach
+    // 🟢 TIE → overlay only
     if (cell.main === RESULT.TIE) {
       if (columns[col]?.[row]) {
         columns[col][row].ties++;
@@ -61,7 +61,7 @@ export function buildBigRoad(values) {
       continue;
     }
 
-    // first result
+    // first non-tie
     if (!lastMain) {
       columns[col] = [];
       columns[col][row] = cell;
@@ -69,21 +69,22 @@ export function buildBigRoad(values) {
       continue;
     }
 
-    // same result → down
+    // same result → continue column
     if (cell.main === lastMain) {
-      // try to go down
-      if (row + 1 < MAX_ROWS && !columns[col]?.[row + 1]) {
+      if (
+        row < MAX_ROWS - 1 &&
+        !columns[col]?.[row + 1]
+      ) {
         row++;
       } else {
-        // bottom hit OR collision → go right
-        col++;
+        col++; // 🔑 overflow goes RIGHT
       }
     }
-    // different → new column
+    // different result → new column
     else {
-      baseCol++; // move main column
-      col = baseCol; // reset near first column
+      col = startCol + 1;
       row = 0;
+      startCol = col;
       lastMain = cell.main;
     }
 
@@ -95,11 +96,28 @@ export function buildBigRoad(values) {
   return columns;
 }
 
-export function normalizeBigRoad(columns, maxRows = 6) {
-  return columns.map(col =>
-    Array.from({ length: maxRows }, (_, r) => col?.[r] ?? null)
-  )
+export function buildLogicalBigRoad(values) {
+  const columns = [];
+  let lastMain = null;
+
+  for (const value of values) {
+    const main = getMainResult(value);
+    if (!main || main === RESULT.TIE) continue;
+
+    let col = columns.at(-1);
+
+    if (!col || col[0].main !== main) {
+      col = [];
+      columns.push(col);
+    }
+
+    col.push({ main });
+    lastMain = main;
+  }
+
+  return columns;
 }
+
 
 export function buildBeadRoad(values, rows = 6) {
   const columns = [];

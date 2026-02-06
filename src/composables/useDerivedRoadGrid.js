@@ -1,21 +1,44 @@
-// useDerivedRoadGrid.js
 export function buildDerivedBigRoad(flatArray, maxRows = 6) {
   const columns = []
 
-  flatArray.forEach((color) => {
-    if (columns.length === 0) {
-      columns.push([color])
+  let col = 0
+  let row = 0
+  let lastColor = null
+  let startCol = 0
+
+  flatArray.forEach(color => {
+    if (!color) return
+
+    // first value
+    if (!lastColor) {
+      columns[col] = []
+      columns[col][row] = color
+      lastColor = color
       return
     }
 
-    const lastCol = columns[columns.length - 1]
-
-    // if last column full or color differs from first color of last column → new column
-    if (lastCol.length >= maxRows || color !== lastCol[0]) {
-      columns.push([color])
-    } else {
-      lastCol.push(color)
+    // same color → go down if possible
+    if (color === lastColor) {
+      if (
+        row < maxRows - 1 &&
+        !columns[col]?.[row + 1]
+      ) {
+        row++
+      } else {
+        col++ // right-bottom
+      }
     }
+    // different color → new column
+    else {
+      col = startCol + 1
+      row = 0
+      startCol = col
+      lastColor = color
+    }
+
+    if (!columns[col]) columns[col] = []
+    columns[col][row] = color
+    lastColor = color
   })
 
   return columns
