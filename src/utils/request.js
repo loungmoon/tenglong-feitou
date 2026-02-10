@@ -40,7 +40,6 @@ api.interceptors.response.use(
           query: { redirect: router.currentRoute.value.fullPath },
         })
       }
-
       return Promise.reject(data)
     }
 

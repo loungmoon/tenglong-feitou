@@ -32,7 +32,7 @@ export const usePlayerStore = defineStore("player", {
 
       const group_nickname = groupStore.setting.group_nickname;
       if (!group_nickname) {
-        console.warn("[player.store] Missing group_nickname");
+        // console.warn("[player.store] Missing group_nickname");
         return null;
       }
 
