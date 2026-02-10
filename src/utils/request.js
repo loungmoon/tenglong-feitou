@@ -4,7 +4,10 @@ import router from "@/router"
 /* token helpers */
 export const getToken = () => localStorage.getItem("token")
 export const setToken = (token) => token && localStorage.setItem("token", token)
-export const clearToken = () => localStorage.removeItem("token")
+export const clearToken = () => {
+  localStorage.removeItem("token")
+  localStorage.removeItem("group_nickname")
+}
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,

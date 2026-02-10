@@ -5,16 +5,13 @@
     <DeskInfoResultPanel />
 
     <CurrentTable />
-    <BottomActions  />
+    <BottomActions />
   </v-container>
 </template>
 
 <script setup>
-
 import ActionPlayerPanel from "./ActionPlayerPanel.vue";
 import DeskInfoResultPanel from "./DeskInfoResultPanel.vue";
 import CurrentTable from "./CurrentTable.vue";
 import BottomActions from "./BottomActions.vue";
-
-
 </script>
