@@ -35,6 +35,7 @@
             density="compact"
             variant="outlined"
             hide-details
+            readonly
           />
         </v-col>
 
@@ -45,6 +46,7 @@
             density="compact"
             variant="outlined"
             hide-details
+            readonly
           />
         </v-col>
 
@@ -55,6 +57,7 @@
             density="compact"
             variant="outlined"
             hide-details
+            readonly
           />
         </v-col>
       </v-row>

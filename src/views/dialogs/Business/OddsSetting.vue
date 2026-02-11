@@ -240,7 +240,7 @@
                     <SelectField
                       v-model="form.transfer_small_change"
                       label="是否强制持零找"
-                      :items="FORCE_ZERO_MODES"
+                      :items="YES_NO"
                       required
                     />
                     <SelectField
@@ -261,19 +261,23 @@
                       :items="YES_NO"
                       required
                     />
-                    <SelectField
+                    <v-text-field
                       v-model="form.pb_bet_calculation_Mode"
                       label="庄闲上盘计算模式"
-                      :items="CALC_MODES"
+                      density="compact"
+                      variant="outlined"
+                      clearable
                       required
                     />
                   </v-col>
 
                   <v-col cols="6">
-                    <SelectField
+                    <v-text-field
                       v-model="form.Integral_statistics_method"
                       label="积分统计方法"
-                      :items="POINT_METHODS"
+                      density="compact"
+                      variant="outlined"
+                      clearable
                       required
                     />
                     <NumberField
@@ -303,10 +307,12 @@
                       :items="YES_NO"
                       required
                     />
-                    <SelectField
+                    <v-text-field
                       v-model="form.screenshot_mode_bet_form"
                       label="投注表截图模式"
-                      :items="SCREENSHOT_MODES"
+                      density="compact"
+                      variant="outlined"
+                      clearable
                       required
                     />
                     <SelectField
@@ -339,32 +345,36 @@
 </template>
 
 <script setup>
-import { ref, computed,watch } from "vue";
-import {
-  YES_NO,
-  POINT_METHODS,
-  FORCE_ZERO_MODES,
-  ZERO_SETTINGS,
-  SCREENSHOT_MODES,
-  CALC_MODES,
-} from "@/composables/options";
-import { useGroupPullStore } from "@/stores/group.store"
-import { getParameter,setParameter } from "@/api/system.api";
+import { ref, computed, watch } from "vue";
+import { useGroupPullStore } from "@/stores/group.store";
+import { getParameter, setParameter } from "@/api/system.api";
 import { useNotify } from "@/composables/useNotifiy";
 import NumberField from "@/components/common/NumberField.vue";
 import SelectField from "@/components/common/SelectField.vue";
 
+const YES_NO = [
+  { label: "要", value: 1 },
+  { label: "不要", value: 0 },
+];
+
+const ZERO_SETTINGS = [
+  { label: "无", value: "无" },
+  { label: "十", value: "十" },
+  { label: "百", value: "百" },
+  { label: "千", value: "千" },
+  { label: "万", value: "万" },
+];
 const model = defineModel({ type: Boolean });
 const notify = useNotify();
-const groupStore = useGroupPullStore()
+const groupStore = useGroupPullStore();
 
 const loading = ref(false);
 const formRef = ref(null);
 const isValid = ref(false);
 
-const groupNickname = computed(()=> groupStore.setting.group_nickname)
+const groupNickname = computed(() => groupStore.setting.group_nickname);
 
-const defaultForm  = () => ({
+const defaultForm = () => ({
   banker_odds: null,
   tie_odds: null,
   lucky_6_2_odds: null,
@@ -393,7 +403,7 @@ const defaultForm  = () => ({
   any_max_limit: null,
 
   points_exchange_ratio: null,
-  Integral_statistics_method: "按有效流水",
+  Integral_statistics_method: "",
   show_points: 0,
   default_exchange: null,
   pb_max_bet_amount: null,
@@ -403,8 +413,8 @@ const defaultForm  = () => ({
   enable_perfect_pairs: 1,
   enable_road: 0,
   enable_any_pairs: 0,
-  screenshot_mode_bet_form: "下注用户",
-  pb_bet_calculation_Mode: "只舍不入",
+  screenshot_mode_bet_form: "",
+  pb_bet_calculation_Mode: "",
   should_statistics_truncated: 0,
   change_settings: "百",
   transfer_small_change: 0,
@@ -412,29 +422,29 @@ const defaultForm  = () => ({
 
 const form = ref(defaultForm());
 
-const fetchParameter = async () =>{
-  if(!groupNickname.value ) return
+const fetchParameter = async () => {
+  if (!groupNickname.value) return;
 
   loading.value = true;
   try {
     const res = await getParameter({
-      group_nickname : groupNickname.value,
+      group_nickname: groupNickname.value,
     });
 
-     const payload = res?.data?.[0];
-     console.log("payload",payload)
+    const payload = res?.data?.[0];
+    console.log("payload", payload);
 
-      if (payload) {
+    if (payload) {
       Object.assign(form.value, defaultForm(), payload);
     }
 
     // Object.assign(form.value, res.data || {});
   } catch (err) {
-     notify.error(err || "获取个人参数失败");
-  }finally{
-     loading.value = false;
+    notify.error(err || "获取个人参数失败");
+  } finally {
+    loading.value = false;
   }
-}
+};
 
 watch(model, async (open) => {
   if (!open) return;
@@ -450,7 +460,7 @@ const confirm = async () => {
   loading.value = true;
   try {
     await setParameter({
-      group_nickname : groupNickname.value,
+      group_nickname: groupNickname.value,
       ...form.value,
     });
     notify.success("修改选手成功");

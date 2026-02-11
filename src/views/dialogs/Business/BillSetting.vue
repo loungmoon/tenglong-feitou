@@ -253,6 +253,8 @@ const refreshPlayers = () => {
 
 /* save */
 const save = async () => {
+  if (!groupNickname.value || !localPlayerName.value) return;
+  
   const result = await formRef.value?.validate();
   if (!result?.valid) return;
 

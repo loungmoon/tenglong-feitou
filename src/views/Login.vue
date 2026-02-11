@@ -104,7 +104,8 @@ const login = async () => {
     setToken(res.data.token)
 
     notify.success(res.msg || "登录成功")
-    router.replace("/layout")
+    // router.replace("/layout")
+    window.location.replace("/layout")
   } catch (err) {
     notify.error(
       err?.response?.data?.msg ||

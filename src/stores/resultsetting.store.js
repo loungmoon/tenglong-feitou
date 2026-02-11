@@ -89,17 +89,27 @@ export const useResultSettingStore = defineStore("resultSetting", {
       this.loading = true;
       try {
         const group_nickname = this.getGroupNickname();
-        if (!group_nickname) return;
+        if (!group_nickname) {
+          this.loaded = true;
+          return;
+        }
+        // const { data } = await getLotteryResultApi({
+        //   group_nickname,
+        // });
+        const res = await getLotteryResultApi({ group_nickname });
 
-        const { data } = await getLotteryResultApi({
-          group_nickname,
-        });
+        const row = res?.data;
+        if (!row) {
+          // backend has no config yet
+          this.loaded = true;
+          return;
+        }
 
         this.setting = {
-          active: Boolean(data.active),
-          official_website_nickname: data.official_website_nickname || "",
-          desk_number: data.desk_number || "",
-          auto_result_report: Boolean(data.auto_result_report),
+          active: Boolean(row.active),
+          official_website_nickname: row.official_website_nickname || "",
+          desk_number: row.desk_number || "",
+          auto_result_report: Boolean(row.auto_result_report),
         };
 
         this.loaded = true;
