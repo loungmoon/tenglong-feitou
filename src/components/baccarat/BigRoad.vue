@@ -162,8 +162,8 @@ watch(
 
 .pair-dot {
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
 }
 
@@ -188,12 +188,12 @@ watch(
 
 .any-pair-dot {
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   background: #2e7d32;
   border-radius: 50%;
-  bottom: 2px;
-  left: 2px;
+  bottom: 3px;
+  left: 3px;
 }
 
 .lucky6-gold {

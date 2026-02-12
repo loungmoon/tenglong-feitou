@@ -65,6 +65,7 @@ import { useRouter } from "vue-router"
 import { loginApi } from "@/api/auth.api"
 import { setToken } from "@/utils/request"
 import { useNotify } from "@/composables/useNotifiy"
+import md5 from "md5"
 
 const router = useRouter()
 const notify = useNotify()
@@ -94,7 +95,7 @@ const login = async () => {
   try {
     const res = await loginApi({
       username: username.value,
-      password: password.value,
+      password: md5(password.value),
     })
 
     if (!res.data || !res.data.token) {
