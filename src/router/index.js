@@ -14,6 +14,7 @@ const routes = [
   },
   {
     path: '/layout',
+    name: "layout",
     component: () => import('@/layouts/DefaultLayout.vue'),
     meta: { layout: 'default',requiresAuth: true}
   },

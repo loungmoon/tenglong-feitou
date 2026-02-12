@@ -18,8 +18,14 @@ import { ref } from "vue";
 import BaseDialog from "@/components/common/BaseDialog.vue";
 import { useRouter } from "vue-router";
 import { clearToken } from "@/utils/request";
+import { useGroupPullStore } from "@/stores/group.store"
+import { usePlayerStore } from "@/stores/player.store"
+import { useResultSettingStore } from "@/stores/resultsetting.store"
 
 const router = useRouter();
+const group = useGroupPullStore();
+const player = usePlayerStore();
+const resultsetting = useResultSettingStore();
 
 const model = defineModel({ type: Boolean });
 const loading = ref(false);
@@ -31,6 +37,9 @@ const confirmLogout = async () => {
   try {
     model.value = false;
     clearToken();
+    group.$reset();
+    player.resetStore();
+    resultsetting.reset();
 
     await router.replace("/login");
   } finally {
