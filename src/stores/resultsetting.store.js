@@ -90,7 +90,7 @@ export const useResultSettingStore = defineStore("resultSetting", {
       try {
         const group_nickname = this.getGroupNickname();
         if (!group_nickname) {
-          this.loaded = true;
+          this.loaded = false;
           return;
         }
         // const { data } = await getLotteryResultApi({
