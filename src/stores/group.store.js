@@ -1,85 +1,91 @@
+//stores/group.store.js
 import { defineStore } from "pinia";
-import {
-  setGroupPullDataApi,
-  getGroupPullDataApi,
-} from "@/api/system.api";
+import { getGroupPullDataApi, setGroupPullDataApi } from "@/api/system.api";
 
 const STORAGE_KEY = "group_nickname";
 
-export const useGroupPullStore = defineStore("groupPull", {
+function getCachedNickname() {
+  return localStorage.getItem(STORAGE_KEY) || "";
+}
+
+function setCachedNickname(nickname) {
+  if (nickname) {
+    localStorage.setItem(STORAGE_KEY, nickname);
+  }
+}
+
+function normalizeResponse(row = {}) {
+  const normalized = {};
+
+  Object.entries(row).forEach(([key, value]) => {
+    normalized[key] =
+      key.startsWith("auto_send_") || key === "active" ? Boolean(value) : value;
+  });
+
+  return normalized;
+}
+
+export const useGroupPullStore = defineStore("group", {
   state: () => ({
     loading: false,
-    loaded: false, // ✅ prevent duplicate API calls
+    isFetched: false,
 
     setting: {
-      group_nickname: localStorage.getItem(STORAGE_KEY) || "",
+      group_nickname: getCachedNickname(),
     },
   }),
 
   getters: {
-    isReady: (state) =>!!state.setting.group_nickname && state.loaded,
+    isReady: (state) => !!state.setting.group_nickname && state.isFetched,
   },
 
   actions: {
-    restoreNickname() {
-      const cached = localStorage.getItem(STORAGE_KEY);
-      if (!this.setting.group_nickname && cached) {
-        this.setting.group_nickname = cached;
-      }
-    },
+    async fetchSetting({ force = false } = {}) {
+      if (this.isFetched && !force) return;
 
-    async fetchSetting(force = false) {
-      if (this.loaded && !force) return;
+      const nickname = this.setting.group_nickname;
 
-      this.restoreNickname();
-      if (!this.setting.group_nickname) {
-        this.loaded = true;
-        return
+      if (!nickname) {
+        this.isFetched = true;
+        return;
       }
 
       this.loading = true;
+
       try {
         const res = await getGroupPullDataApi({
-          group_nickname: this.setting.group_nickname,
+          group_nickname: nickname,
         });
 
         const row = res.data?.[0] || null;
-        if (!row){
-          this.loaded = true;
+        if (!row) {
+          this.isFetched = true;
           return;
         }
 
-        // persist nickname
-        if (row.group_nickname) {
-          localStorage.setItem(STORAGE_KEY, row.group_nickname);
-        }
-
-        const normalized = {};
-        for (const [key, value] of Object.entries(row)) {
-          normalized[key] =
-            key.startsWith("auto_send_") || key === "active"
-              ? Boolean(value)
-              : value;
-        }
+        const normalized = normalizeResponse(row);
 
         this.setting = {
           ...this.setting,
           ...normalized,
         };
 
-        this.loaded = true;
+        setCachedNickname(this.setting.group_nickname);
+
+        this.isFetched = true;
       } finally {
         this.loading = false;
       }
     },
 
     async ensureReady() {
-      if (this.loaded) return;
+      if (this.isFetched) return;
       await this.fetchSetting();
     },
 
     async saveSetting(form) {
       this.loading = true;
+
       try {
         const payload = {};
         for (const [k, v] of Object.entries(form)) {
@@ -88,24 +94,26 @@ export const useGroupPullStore = defineStore("groupPull", {
 
         await setGroupPullDataApi(payload);
 
-      
-        if (form.group_nickname) {
-          localStorage.setItem(STORAGE_KEY, form.group_nickname);
-        }
-
         this.setting = {
           ...this.setting,
           ...form,
         };
-       this.loaded = true;
+
+        setCachedNickname(form.group_nickname);
+        this.isFetched = true;
       } finally {
         this.loading = false;
       }
     },
 
     async reload() {
-      this.loaded = false;
+      this.isFetched = false;
       await this.fetchSetting(true);
+    },
+
+    reset() {
+      this.$reset();
+      localStorage.removeItem(STORAGE_KEY);
     },
   },
 });

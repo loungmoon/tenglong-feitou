@@ -38,7 +38,7 @@ const confirmLogout = async () => {
     model.value = false;
     clearToken();
     group.$reset();
-    player.resetStore();
+    player.reset();
     resultsetting.reset();
 
     await router.replace("/login");

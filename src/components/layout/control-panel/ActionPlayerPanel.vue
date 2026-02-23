@@ -97,10 +97,6 @@ const actions = [
   { label: "隐藏选手", action: "hide", needPlayer: true },
 ];
 
-onMounted(() => {
-  playerStore.fetchPlayers();
-});
-
 const selectPlayer = (name) => {
   playerStore.setSelectedByName(name);
 };

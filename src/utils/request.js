@@ -40,7 +40,11 @@ api.interceptors.response.use(
           query: { redirect: router.currentRoute.value.fullPath },
         })
       }
-      return Promise.reject(data)
+      return Promise.reject(new Error(data.msg || "Unauthorized"))
+    }
+
+    if (data.code !== 200) {
+      return Promise.reject(new Error(data.msg || "Error"));
     }
 
     return data

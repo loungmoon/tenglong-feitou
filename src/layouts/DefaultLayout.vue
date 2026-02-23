@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { watch } from "vue";
+import { onMounted,watch } from "vue";
 import AppNavbar from "@/components/layout/AppNavbar.vue";
 import Dashbord from "@/views/Dashboard.vue"
 import AppControlPanel from "@/components/layout/control-panel/ControlPanel.vue";
@@ -49,7 +49,9 @@ const groupStore = useGroupPullStore();
 const playerStore = usePlayerStore();
 const resultstore = useResultSettingStore();
 
-groupStore.ensureReady();
+onMounted(async () => {
+  await groupStore.ensureReady();
+});
 
 watch(
   () => groupStore.isReady,
@@ -58,6 +60,7 @@ watch(
 
     await resultstore.fetchSetting();
     await resultstore.getDeskInfo();
+    await playerStore.fetchPlayers();
   },
   { immediate: true }
 );
@@ -67,8 +70,12 @@ watch(
   async (newVal, oldVal) => {
     if (!groupStore.isReady) return;
     if (!newVal || newVal === oldVal) return;
+    
+    resultstore.reset();
+    playerStore.reset();
 
-    playerStore.resetStore();
+    await resultstore.fetchSetting({force: true});
+    await resultstore.getDeskInfo();
     await playerStore.fetchPlayers(true);
   }
 );

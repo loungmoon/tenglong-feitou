@@ -9,39 +9,56 @@ import { useGroupPullStore } from "@/stores/group.store";
 import {
   parseGameHistory,
   buildBigRoad,
-  buildBeadRoad,
   buildLogicalBigRoad,
+  buildBeadRoad,
 } from "@/composables/useBigRoad";
 
 import { DerivedRoad } from "@/composables/DerivedRoad";
 import { buildDerivedBigRoad } from "@/composables/useDerivedRoadGrid";
 
-const bigEyeEval = new DerivedRoad(1);
-const smallEval = new DerivedRoad(2);
-const cockroachEval = new DerivedRoad(3);
+function createDefaultSetting() {
+  return {
+    active: false,
+    official_website_nickname: "",
+    desk_number: "",
+    auto_result_report: false,
+  };
+}
 
-export const useResultSettingStore = defineStore("resultSetting", {
+function createDefaultInfo() {
+  return {
+    shoe: null,
+    round: null,
+    gameHistory: "",
+  };
+}
+
+function normalizeSetting(row = {}) {
+  return {
+    active: Boolean(row.active),
+    official_website_nickname: row.official_website_nickname || "",
+    desk_number: row.desk_number || "",
+    auto_result_report: Boolean(row.auto_result_report),
+  };
+}
+
+export const useResultSettingStore = defineStore("result", {
   state: () => ({
-    loaded: false,
     loading: false,
-    setting: {
-      active: false,
-      official_website_nickname: "",
-      desk_number: "",
-      auto_result_report: false,
-    },
-    info: {
-      shoe: null,
-      round: null,
-      gameHistory: "",
-    },
+    isFetched: false,
+    setting: createDefaultSetting(),
+    info: createDefaultInfo(),
   }),
 
   getters: {
+     groupNickname() {
+      const groupStore = useGroupPullStore();
+      return groupStore.setting.group_nickname;
+    },
+
     values(state) {
       if (!state.info.gameHistory) return [];
-      const values = parseGameHistory(state.info.gameHistory);
-      return values;
+      return parseGameHistory(state.info.gameHistory);
     },
 
     rawBigRoad() {
@@ -57,73 +74,61 @@ export const useResultSettingStore = defineStore("resultSetting", {
     },
 
     bigEyeRoadRaw() {
-      const flat = bigEyeEval.evaluate(this.rawBigRoad);
-      return buildDerivedBigRoad(flat, 6);
+      return this.buildDerived(1);
     },
 
     smallRoadRaw() {
-      const flat = smallEval.evaluate(this.rawBigRoad);
-      return buildDerivedBigRoad(flat, 6);
+      return this.buildDerived(2);
     },
 
     cockroachRoadRaw() {
-      const flat = cockroachEval.evaluate(this.rawBigRoad);
-      return buildDerivedBigRoad(flat, 6);
+      return this.buildDerived(3);
     },
   },
 
   actions: {
-    getGroupNickname() {
-      const groupStore = useGroupPullStore();
-      return groupStore.setting.group_nickname || null;
+    buildDerived(type){
+        if(!this.rawBigRoad.length) return [];
+
+        const evaluator = new DerivedRoad(type);
+        const flat = evaluator.evaluate(this.rawBigRoad);
+        return buildDerivedBigRoad(flat,6)
     },
 
-    async ensureReady() {
-      if (this.loaded) return;
-      await this.fetchSetting();
-    },
+    async fetchSetting({ force = false } = {}) {
+       if (this.isFetched && !force) return;
 
-    async fetchSetting() {
-      if (this.loaded) return;
+       const group_nickname = this.groupNickname;
+        if (!group_nickname) {
+          this.isFetched = true;
+          return;
+        }
 
       this.loading = true;
       try {
-        const group_nickname = this.getGroupNickname();
-        if (!group_nickname) {
-          this.loaded = false;
-          return;
-        }
-        // const { data } = await getLotteryResultApi({
-        //   group_nickname,
-        // });
         const res = await getLotteryResultApi({ group_nickname });
-
         const row = res?.data;
-        if (!row) {
-          // backend has no config yet
-          this.loaded = true;
-          return;
+        if(row){
+          this.setting = normalizeSetting(row);
         }
-
-        this.setting = {
-          active: Boolean(row.active),
-          official_website_nickname: row.official_website_nickname || "",
-          desk_number: row.desk_number || "",
-          auto_result_report: Boolean(row.auto_result_report),
-        };
-
-        this.loaded = true;
+        this.isFetched = true;
       } finally {
         this.loading = false;
       }
     },
 
+    async ensureReady() {
+      if (this.isFetched) return;
+      await this.fetchSetting();
+    },
+
     async saveSetting(form) {
+      const group_nickname = this.groupNickname;
+      if (!group_nickname) return;
+      
       this.loading = true;
       try {
-        const group_nickname = this.getGroupNickname();
-        if (!group_nickname) return;
-
+       
         await setLotteryResultApi({
           group_nickname,
           active: form.active ? 1 : 0,
@@ -133,20 +138,24 @@ export const useResultSettingStore = defineStore("resultSetting", {
         });
 
         this.setting = { ...form };
-        this.loaded = true;
+        this.isFetched = true;
       } finally {
         this.loading = false;
       }
     },
 
     async getDeskInfo() {
-      await this.ensureReady();
+      if (!this.setting.desk_number) return;
 
-      const deskNumber = this.setting.desk_number;
-      if (!deskNumber) return;
+      const group_nickname = this.groupNickname;
+      if (!group_nickname) return;
 
-      const { data } = await deskInfo({
-        desk_number: deskNumber,
+      this.loading = true;
+
+      try{
+         const { data } = await deskInfo({
+        group_nickname,
+        desk_number: this.setting.desk_number,
       });
 
       this.info = {
@@ -155,23 +164,18 @@ export const useResultSettingStore = defineStore("resultSetting", {
         round: data?.round ?? null,
         gameHistory: data?.gameHistory ?? this.info.gameHistory,
       };
+      }finally{
+        this.loading = false;
+      }
+    },
+
+    async reload() {
+      this.isFetched = false;
+      await this.fetchSetting({ force: true });
     },
 
     reset() {
-      this.loaded = false;
-      this.loading = false;
-
-      this.setting = {
-        active: false,
-        official_website_nickname: "",
-        desk_number: "",
-        auto_result_report: false,
-      };
-      this.info = {
-        shoe: null,
-        round: null,
-        gameHistory: "",
-      };
-    },
+      this.$reset();
+    }
   },
 });
