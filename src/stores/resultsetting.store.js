@@ -51,7 +51,7 @@ export const useResultSettingStore = defineStore("result", {
   }),
 
   getters: {
-     groupNickname() {
+    groupNickname() {
       const groupStore = useGroupPullStore();
       return groupStore.setting.group_nickname;
     },
@@ -87,31 +87,34 @@ export const useResultSettingStore = defineStore("result", {
   },
 
   actions: {
-    buildDerived(type){
-        if(!this.rawBigRoad.length) return [];
+    buildDerived(type) {
+      if (!this.rawBigRoad.length) return [];
 
-        const evaluator = new DerivedRoad(type);
-        const flat = evaluator.evaluate(this.rawBigRoad);
-        return buildDerivedBigRoad(flat,6)
+      const evaluator = new DerivedRoad(type);
+      const flat = evaluator.evaluate(this.rawBigRoad);
+      return buildDerivedBigRoad(flat, 6);
     },
 
     async fetchSetting({ force = false } = {}) {
-       if (this.isFetched && !force) return;
+      if (this.isFetched && !force) return;
 
-       const group_nickname = this.groupNickname;
-        if (!group_nickname) {
-          this.isFetched = true;
-          return;
-        }
+      const group_nickname = this.groupNickname;
+      if (!group_nickname) {
+        this.isFetched = true;
+        return;
+      }
 
       this.loading = true;
       try {
         const res = await getLotteryResultApi({ group_nickname });
         const row = res?.data;
-        if(row){
+        if (row) {
           this.setting = normalizeSetting(row);
         }
         this.isFetched = true;
+      } catch (err) {
+        console.warn("Result setting fetch failed:", err.message);
+        return;
       } finally {
         this.loading = false;
       }
@@ -125,10 +128,9 @@ export const useResultSettingStore = defineStore("result", {
     async saveSetting(form) {
       const group_nickname = this.groupNickname;
       if (!group_nickname) return;
-      
+
       this.loading = true;
       try {
-       
         await setLotteryResultApi({
           group_nickname,
           active: form.active ? 1 : 0,
@@ -152,19 +154,19 @@ export const useResultSettingStore = defineStore("result", {
 
       this.loading = true;
 
-      try{
-         const { data } = await deskInfo({
-        group_nickname,
-        desk_number: this.setting.desk_number,
-      });
+      try {
+        const { data } = await deskInfo({
+          group_nickname,
+          desk_number: this.setting.desk_number,
+        });
 
-      this.info = {
-        ...this.info,
-        shoe: data?.shoe ?? null,
-        round: data?.round ?? null,
-        gameHistory: data?.gameHistory ?? this.info.gameHistory,
-      };
-      }finally{
+        this.info = {
+          ...this.info,
+          shoe: data?.shoe ?? null,
+          round: data?.round ?? null,
+          gameHistory: data?.gameHistory ?? this.info.gameHistory,
+        };
+      } finally {
         this.loading = false;
       }
     },
@@ -176,6 +178,6 @@ export const useResultSettingStore = defineStore("result", {
 
     reset() {
       this.$reset();
-    }
+    },
   },
 });
