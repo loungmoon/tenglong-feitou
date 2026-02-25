@@ -4,7 +4,7 @@
     title="删除选手"
     icon="mdi-alert"
     maxWidth="360"
-    confirmText="删除"
+    confirmBtn="删除"
     confirmColor="error"
     :loading="loading"
     @confirm="confirm"
@@ -23,7 +23,7 @@ import BaseDialog from "@/components/common/BaseDialog.vue";
 import { usePlayerStore } from "@/stores/player.store";
 import { useNotify } from "@/composables/useNotifiy";
 
-const model = defineModel(Boolean);
+const model = defineModel({ type: Boolean });
 
 const props = defineProps({
   player: {

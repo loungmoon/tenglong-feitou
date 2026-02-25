@@ -2,8 +2,8 @@
   <v-dialog
     v-model="model"
     :max-width="maxWidth"
+    :persistent="computedPersistent"
     scrollable
-    persistent
     :retain-focus="false"
   >
     <v-card rounded="lg">
@@ -26,7 +26,9 @@
           icon
           size="small"
           variant="text"
-          @click="close"
+          aria-label="取消"
+          :disabled="loading"
+          @click="handleClose"
         >
           <v-icon size="18">mdi-close</v-icon>
         </v-btn>
@@ -34,7 +36,7 @@
 
       <v-divider />
 
-      <v-card-text class="text-body-2 text-medium-emphasis">
+      <v-card-text class="text-body-2 text-black">
         <slot />
       </v-card-text>
 
@@ -42,17 +44,17 @@
        <v-divider />
       <v-card-actions class="justify-center">
         <slot name="actions">
-          <v-btn variant="text" @click="close" elevation="2">
+          <v-btn variant="text" :disabled="loading" elevation="2" @click="handleClose" >
             取消
           </v-btn>
 
           <v-btn
             :loading="loading"
-            :disabled="loading"
+            :disabled="loading || confirmDisabled"
             :color="confirmColor"
             variant="flat"
             elevation="2"
-            @click="$emit('confirm')"
+            @click="handleConfirm"
           >
             {{ confirmBtn }}
           </v-btn>
@@ -63,21 +65,38 @@
 </template>
 
 <script setup>
-const model = defineModel()
+import { computed } from 'vue'
 
-defineProps({
+const model = defineModel({ type: Boolean })
+
+const props = defineProps({
   title: { type: String, required: true },
   icon: { type: String, default: null },
   iconColor: { type: String, default: 'primary' },
   confirmColor: { type: String, default: 'primary' },
   maxWidth: { type: [Number, String], default: 360 },
   loading: { type: Boolean, default: false },
-  confirmBtn: { type:String, default: '确定' }
+  confirmBtn: { type:String, default: '确定' },
+  confirmDisabled:{ type:Boolean, default:false },
+  persistent: {type: Boolean, default: false }
 })
 
-defineEmits(['confirm'])
+const emit = defineEmits(['confirm','close'])
 
-const close = () => {
+const computedPersistent = computed(() => {
+  return props.persistent || props.loading
+})
+
+const handleClose = () => {
+   if (props.loading) return
+
+  emit('close')
   model.value = false
+}
+
+const handleConfirm = () => {
+  if (props.loading || props.confirmDisabled) return
+
+  emit('confirm')
 }
 </script>
