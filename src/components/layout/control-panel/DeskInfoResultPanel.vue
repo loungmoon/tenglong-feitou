@@ -80,6 +80,7 @@
             color="primary"
             variant="tonal"
             @click="dlgNextRound = true"
+            :disabled="nextRoundActive"
             >开始下注</v-btn
           >
         </v-col>
@@ -205,7 +206,7 @@
       <v-btn
         block
         :loading="loading"
-        :disabled="disabled"
+        :disabled="resultActive"
         size="large"
         color="#d17b4d"
         @click="submitResult"
@@ -264,7 +265,8 @@ const dlgLock = ref(false);
 const dlgLast = ref(false);
 
 const loading = ref(false);
-const disabled = ref(true);
+const resultActive = ref(true);
+const nextRoundActive = ref(false);
 
 const form = ref({
   shoe: null,
@@ -343,7 +345,9 @@ const refreshDesk = async () => {
 const handleNextRound = async (data) => {
   form.value.round = Number(data.round);
   form.value.shoe = Number(data.shos);
-  disabled.value = false;
+  
+  nextRoundActive.value = true;
+  resultActive.value = false;
   await refreshDesk();
 };
 
@@ -377,7 +381,9 @@ const submitResult = async () => {
   try {
     await drawLotteryApi(payload);
     notify.success("开奖成功");
-    disabled.value = true;
+    
+    nextRoundActive.value = false;
+    resultActive.value = true;
     await refreshDesk();
   } catch (err) {
     console.error(err);
