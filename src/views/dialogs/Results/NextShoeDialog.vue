@@ -39,19 +39,23 @@ const notify = useNotify();
 const groupStore = useGroupPullStore();
 
 const groupNickName = computed(
-  ()=> groupStore.setting.group_nickname
+  ()=> groupStore.setting?.group_nickname ?? null
 )
 
 const confirm = async () => {
-  loading.value = true;
+  if (loading.value) return;
 
   if(!groupNickName.value){
+    notify.error("群组信息未加载，请刷新页面");
     return;
   }
+
+  loading.value = true;
+  
   try {
     const res = await proceedNextShoeApi({
       group_nickname: groupNickName.value,
-      desk_number: deskNumber,
+      desk_number: Number(deskNumber),
     });
 
     notify.success(res.msg || "成功进入下一靴");

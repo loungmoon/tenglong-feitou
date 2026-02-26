@@ -44,12 +44,16 @@ const groupNickName = computed(() => groupStore.setting.group_nickname);
 const confirm = async () => {
   if (loading.value) return;
 
-  if (!groupNickName.value) return;
+  // if (!groupNickName.value) return;
+  if (!groupNickName.value) {
+  notify.error("群组信息未加载，请刷新页面");
+  return;
+}
   
   loading.value = true;
   try {
     const res = await nextRoundApi({
-      desk_number: deskNumber,
+      desk_number: Number(deskNumber),
       group_nickname: groupNickName.value,
     });
 

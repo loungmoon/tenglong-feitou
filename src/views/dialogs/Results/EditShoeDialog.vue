@@ -59,7 +59,7 @@ const emit = defineEmits(["success"]);
 const loading = ref(false);
 const notify = useNotify();
 const groupStore = useGroupPullStore();
-const groupNickName = computed(() => groupStore.setting.group_nickname);
+const groupNickName = computed(() => groupStore.setting?.group_nickname ?? null);
 
 const localForm = ref({
   deskNumber: null,
@@ -77,7 +77,6 @@ watch(
   }
 )
 
-
 const confirm = async () => {
   if (loading.value) return;
 
@@ -86,7 +85,11 @@ const confirm = async () => {
     return;
   }
 
-  if (!groupNickName.value) return;
+  if (!groupNickName.value) {
+  notify.error("群组信息未加载，请刷新页面");
+  return;
+}
+
 
   loading.value = true;
   try {
@@ -101,7 +104,7 @@ const confirm = async () => {
     emit("success", res.data || null);
     model.value = false;
   } catch (err) {
-    notify.error(err);
+    notify.error(err.response?.data?.message);
   } finally {
     loading.value = false;
   }

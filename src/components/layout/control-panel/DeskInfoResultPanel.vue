@@ -220,7 +220,7 @@
   <NextShoe
     v-model="dlgNextShoe"
     :desk-number="deskNumber"
-    @success="refreshDesk"
+    @success="handleNextShoe"
   />
   <NextRound
     v-model="dlgNextRound"
@@ -284,13 +284,7 @@ const anyPair = ref(false);
 
 const hasMainResult = computed(() => !!mainResult.value);
 
-const deskNumber = computed({
-  get: () => store.setting.desk_number,
-  set: (val) => {
-    store.setting.desk_number = val;
-  },
-});
-
+const deskNumber = computed(() => store.setting.desk_number ?? null);
 const groupNickName = computed(() => groupStore.setting.group_nickname);
 
 watch(
@@ -342,6 +336,12 @@ const refreshDesk = async () => {
   await store.getDeskInfo();
 };
 
+const handleNextShoe = async () =>{
+  nextRoundActive.value = false;
+  resultActive.value = true;
+  await refreshDesk();
+}
+
 const handleNextRound = async (data) => {
   form.value.round = Number(data.round);
   form.value.shoe = Number(data.shos);
@@ -354,11 +354,15 @@ const handleNextRound = async (data) => {
 const handleEditShoe = async (data) => {
   form.value.shoe = data.shoe;
   form.value.round = data.round;
+
+  nextRoundActive.value = false;
   await refreshDesk();
 };
 
 /* submit */
 const submitResult = async () => {
+  if(!groupNickName.value) return;
+
   if (!form.value.shoe || !form.value.round) {
     notify.error("请输入靴号和局号");
     return;
@@ -381,7 +385,7 @@ const submitResult = async () => {
   try {
     await drawLotteryApi(payload);
     notify.success("开奖成功");
-    
+
     nextRoundActive.value = false;
     resultActive.value = true;
     await refreshDesk();
