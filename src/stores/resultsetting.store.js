@@ -15,6 +15,9 @@ import {
 
 import { DerivedRoad } from "@/composables/DerivedRoad";
 import { buildDerivedBigRoad } from "@/composables/useDerivedRoadGrid";
+import { useNotify } from "@/composables/useNotifiy"
+
+const notify = useNotify()
 
 function createDefaultSetting() {
   return {
@@ -51,11 +54,6 @@ export const useResultSettingStore = defineStore("result", {
   }),
 
   getters: {
-    groupNickname() {
-      const groupStore = useGroupPullStore();
-      return groupStore.setting.group_nickname;
-    },
-
     values(state) {
       if (!state.info.gameHistory) return [];
       return parseGameHistory(state.info.gameHistory);
@@ -95,10 +93,15 @@ export const useResultSettingStore = defineStore("result", {
       return buildDerivedBigRoad(flat, 6);
     },
 
+    groupNickname() {
+      const groupStore = useGroupPullStore();
+      return groupStore.setting.group_nickname;
+    },
+
     async fetchSetting({ force = false } = {}) {
       if (this.isFetched && !force) return;
 
-      const group_nickname = this.groupNickname;
+      const group_nickname = this.groupNickname();
       if (!group_nickname) {
         this.isFetched = true;
         return;
@@ -113,7 +116,8 @@ export const useResultSettingStore = defineStore("result", {
         }
         this.isFetched = true;
       } catch (err) {
-        console.warn("Result setting fetch failed:", err.message);
+        // console.warn("Result setting fetch failed:", err.message);
+        notify.error(err.message)
         return;
       } finally {
         this.loading = false;
@@ -126,7 +130,7 @@ export const useResultSettingStore = defineStore("result", {
     },
 
     async saveSetting(form) {
-      const group_nickname = this.groupNickname;
+      const group_nickname = this.groupNickname();
       if (!group_nickname) return;
 
       this.loading = true;
@@ -149,7 +153,7 @@ export const useResultSettingStore = defineStore("result", {
     async getDeskInfo() {
       if (!this.setting.desk_number) return;
 
-      const group_nickname = this.groupNickname;
+      const group_nickname = this.groupNickname();
       if (!group_nickname) return;
 
       this.loading = true;
@@ -166,6 +170,10 @@ export const useResultSettingStore = defineStore("result", {
           round: data?.round ?? null,
           gameHistory: data?.gameHistory ?? this.info.gameHistory,
         };
+      } catch (err) {
+        console.warn("Result DeskInfo fetch failed:", err.message);
+        // notify.error(err.message)
+        return;
       } finally {
         this.loading = false;
       }

@@ -1,11 +1,11 @@
 <template>
-  <v-card elevation="0">
-    <v-card-title class="text-subtitle-1 font-weight-bold pa-0 mb-3">
+  <div class="mt-4">
+    <div class="section-title">
       {{ title }}
-    </v-card-title>
+    </div>
 
     <slot />
-  </v-card>
+  </div>
 </template>
 
 <script setup>
@@ -16,3 +16,11 @@ defineProps({
   },
 });
 </script>
+
+<style scoped>
+.section-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+</style>

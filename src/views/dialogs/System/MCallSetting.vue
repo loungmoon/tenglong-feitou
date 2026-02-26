@@ -37,7 +37,6 @@
               variant="outlined"
               density="compact"
               label="账号"
-              :rules="requiredData"
             />
           </v-col>
 
@@ -47,7 +46,6 @@
               variant="outlined"
               density="compact"
               label="拉表机器人昵称"
-              :rules="requiredData"
               clearable
             />
           </v-col>
@@ -58,7 +56,6 @@
               variant="outlined"
               density="compact"
               label="报注群昵称"
-              :rules="requiredData"
               clearable
             />
           </v-col>
@@ -118,7 +115,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch } from "vue";
 import { useGroupPullStore } from "@/stores/group.store";
 import { useNotify } from "@/composables/useNotifiy";
 

@@ -50,7 +50,7 @@
                     :key="p.playername"
                     color="primary"
                     :active="localPlayerName === p.playername"
-                   @click="selectPlayer(p.playername)"
+                    @click="selectPlayer(p.playername)"
                   >
                     <template #prepend>
                       <v-icon
@@ -77,6 +77,13 @@
 
             <!-- RIGHT -->
             <v-col cols="8">
+              <v-overlay
+                :model-value="fetching"
+                contained
+                class="align-center justify-center"
+              >
+                <v-progress-circular indeterminate size="48" />
+              </v-overlay>
               <FieldSetBox title="个人占成设置">
                 <v-row dense>
                   <v-col cols="6">
@@ -172,18 +179,19 @@ import NumberField from "@/components/common/NumberField.vue";
 const model = defineModel({ type: Boolean });
 
 const playerStore = usePlayerStore();
-const groupStore = useGroupPullStore()
+const groupStore = useGroupPullStore();
 const notify = useNotify();
 
 const loading = ref(false);
+const fetching = ref(false);
 const formRef = ref(null);
 const isValid = ref(false);
 const localPlayerName = ref("");
 
-const groupNickname = computed(()=> groupStore.setting.group_nickname);
+const groupNickname = computed(() => groupStore.setting.group_nickname);
 
 /* form */
-const createForm  = () => ({
+const createForm = () => ({
   bp_personal_share: null,
   bp_personal_share_upperlimit: null,
   sb_personal_share: null,
@@ -201,32 +209,38 @@ const form = ref(createForm());
 
 const extractPayload = (res) => res?.data?.data ?? null;
 
-const fetchPersonalParameter = async () =>{
-   if (!groupNickname.value || !localPlayerName.value) return;
-   if (loading.value) return;
+const fetchPersonalParameter = async () => {
+  if (!groupNickname.value || !localPlayerName.value) return;
+  if (fetching.value) return;
 
-  loading.value = true;
+  fetching.value = true;
   try {
     const res = await getPersonalParameter({
-      group_nickname : groupNickname.value,
-      player_name : localPlayerName.value
+      group_nickname: groupNickname.value,
+      player_name: localPlayerName.value,
     });
 
-   const payload =  extractPayload(res);
-   const record = Array.isArray(payload) ? payload[0] : payload;
+    const payload = extractPayload(res);
+    const record = Array.isArray(payload) ? payload[0] : payload;
 
-     if (!record  || Object.keys(record ).length === 0) {
+    if (!record || Object.keys(record).length === 0) {
       Object.assign(form.value, createForm());
       return;
     }
+    // Object.assign(form.value, createForm(), record);
+    const allowedKeys = Object.keys(createForm());
 
-    Object.assign(form.value, createForm(), record);
+    const filtered = Object.fromEntries(
+      Object.entries(record).filter(([key]) => allowedKeys.includes(key)),
+    );
+
+    Object.assign(form.value, createForm(), filtered);
   } catch (err) {
-     notify.error(err || "获取个人参数失败");
-  }finally{
-     loading.value = false;
+    notify.error(err || "获取个人参数失败");
+  } finally {
+    fetching.value = false;
   }
-}
+};
 
 watch(model, async (open) => {
   if (!open) return;
@@ -242,7 +256,7 @@ watch(model, async (open) => {
 });
 
 const selectPlayer = async (name) => {
-   if (localPlayerName.value === name) return;
+  if (localPlayerName.value === name) return;
   localPlayerName.value = name;
   await fetchPersonalParameter();
 };
@@ -254,14 +268,14 @@ const refreshPlayers = () => {
 /* save */
 const save = async () => {
   if (!groupNickname.value || !localPlayerName.value) return;
-  
+
   const result = await formRef.value?.validate();
   if (!result?.valid) return;
 
   loading.value = true;
   try {
     const payload = Object.fromEntries(
-      Object.entries(form.value).filter(([, v]) => v !== null)
+      Object.entries(form.value).filter(([, v]) => v !== null),
     );
 
     await setPersonalParameter({

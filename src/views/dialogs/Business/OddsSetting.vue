@@ -267,7 +267,7 @@
                       density="compact"
                       variant="outlined"
                       clearable
-                      required
+                      :rules="required"
                     />
                   </v-col>
 
@@ -278,7 +278,7 @@
                       density="compact"
                       variant="outlined"
                       clearable
-                      required
+                      :rules="required"
                     />
                     <NumberField
                       v-model="form.default_exchange"
@@ -313,7 +313,7 @@
                       density="compact"
                       variant="outlined"
                       clearable
-                      required
+                      :rules="required"
                     />
                     <SelectField
                       v-model="form.should_statistics_truncated"
@@ -374,6 +374,10 @@ const isValid = ref(false);
 
 const groupNickname = computed(() => groupStore.setting.group_nickname);
 
+const required = [
+  v => !!v || "必需的"
+]
+
 const defaultForm = () => ({
   banker_odds: null,
   tie_odds: null,
@@ -432,7 +436,6 @@ const fetchParameter = async () => {
     });
 
     const payload = res?.data?.[0];
-    console.log("payload", payload);
 
     if (payload) {
       Object.assign(form.value, defaultForm(), payload);

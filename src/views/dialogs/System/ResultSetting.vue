@@ -20,13 +20,13 @@
         </v-col>
 
         <v-col cols="12" md="5">
-          <v-select
+          <v-text-field
             v-model="form.official_website_nickname"
-            :items="nicknames"
             label="官网昵称"
             variant="outlined"
             density="compact"
             :rules="nicknameRules"
+            clearable
           />
         </v-col>
 
@@ -86,20 +86,12 @@ const deskRules = computed(() => [
   (v) => !v || /^[a-zA-Z0-9]+$/.test(v) || "台号只能包含字母和数字",
 ])
 
-const nicknames = [
-  "马尼拉",
-  "卡卡湾",
-  "百乐门",
-  "太阳城",
-  "新卡卡湾",
-  "万金汇",
-]
 
 /* ---------- OPEN DIALOG ---------- */
 watch(model, async (open) => {
   if (!open) return
 
-  // await store.ensureReady();
+  await store.ensureReady();
 
   Object.assign(form, store.setting);
 })
@@ -112,6 +104,7 @@ const handleSubmit = async () => {
   try {
     await store.saveSetting({ ...form })
     notify.success("保存成功")
+    await store.getDeskInfo();
     model.value = false
   } catch (err) {
     notify.error(err || "保存失败")

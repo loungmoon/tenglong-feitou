@@ -67,8 +67,9 @@ const newNicknameRules = computed(() => [
 ])
 
 watch(visible, (open) => {
-  if (!open) {
+  if (open) {
     newNickname.value = ""
+  } else {
     loading.value = false
   }
 })
@@ -81,11 +82,13 @@ const handleConfirm = async () => {
 
   const { valid } = await formRef.value.validate()
   if (!valid) return
+
+  const nickname = newNickname.value.trim()
   loading.value = true
   try {
     const res =await editDeskNickname({
       old_desk_nickname: deskNumber.value,
-      new_desk_nickname: newNickname.value,
+      new_desk_nickname: nickname,
       group_nickname: groupNickName.value,
     })
 

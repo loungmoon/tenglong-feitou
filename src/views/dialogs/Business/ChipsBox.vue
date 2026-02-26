@@ -9,6 +9,16 @@
   >
     <v-form ref="form" v-model="valid">
       <v-text-field
+        v-model="groupNickname"
+        label="开工群昵称"
+        density="compact"
+        variant="outlined"
+        class="mt-4"
+        readonly
+      >
+      </v-text-field>
+
+      <v-text-field
         v-model.number="amount"
         label="筹码数"
         variant="outlined"
@@ -18,16 +28,6 @@
         hide-details="auto"
         clearable
       />
-
-      <v-text-field
-        v-model="groupNickname"
-        label="开工群昵称"
-        density="compact"
-        variant="outlined"
-        class="mt-4"
-        readonly
-      >
-      </v-text-field>
 
       <v-row justify="center" class="mt-2">
         <span class="text-error text-caption">
@@ -61,7 +61,7 @@ const groupNickname = computed(() => groupStore.setting.group_nickname);
 const currentTime = computed(() => new Date().toLocaleString());
 
 const amountRules = [
-  (v) => v !== null || "请输入筹码数",
+  (v) => v !== null && v !== "" || "请输入筹码数",
   (v) => Number(v) > 0 || "筹码必须大于 0",
   (v) => Number.isInteger(v) || "只能输入整数",
 ];
@@ -69,17 +69,23 @@ const amountRules = [
 const confirm = async () => {
   if (loading.value) return;
 
+  if (!groupNickname.value) {
+    notify.error("未找到群昵称");
+    return;
+  }
+
   const { valid } = await form.value.validate();
   if (!valid) return;
 
+  loading.value = true;
   try {
     const res = await initDeskCoin({
       coin: amount.value,
-      group_nickname: groupNickname.value
+      group_nickname: groupNickname.value,
     });
 
     notify.success(res.msg);
-    amount.value = "";
+    amount.value = null;
     model.value = false;
   } catch (err) {
     notify.error(err?.message);

@@ -65,7 +65,9 @@ const onFileChange = async (e) => {
   } catch {
     notify.error("上传失败");
   } finally {
+    if(inputRef.value){
     inputRef.value.value = "";
+    }
   }
 };
 
