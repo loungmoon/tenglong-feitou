@@ -7,11 +7,32 @@ export const RESULT = {
   TIE: "TIE",
 };
 
-export function parseGameHistory(historyStr) {
-  return historyStr
-    .split("^")
-    .filter((v) => v !== "")
-    .map(Number);
+// export function parseGameHistory(historyStr) {
+//   return historyStr
+//     .split("^")
+//     .filter((v) => v !== "")
+//     .map(Number);
+// }
+
+export function parseGameHistory(history) {
+  if (!history) return [];
+
+  if (Array.isArray(history)) {
+    return history.map(Number);
+  }
+
+  if (typeof history === "number") {
+    return [history];
+  }
+
+  if (typeof history === "string") {
+    return history
+      .split("^")
+      .filter(Boolean)
+      .map(Number);
+  }
+
+  return [];
 }
 
 export function getMainResult(value) {
