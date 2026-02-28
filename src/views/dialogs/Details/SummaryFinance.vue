@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="model" max-width="1100" persistent>
+  <v-dialog v-model="model" max-width="1400" persistent>
     <v-card>
       <v-card-title
         class="d-flex justify-space-between align-center bg-grey-lighten-3"
@@ -25,61 +25,83 @@
             >
               刷新选手
             </v-btn>
+
             <v-row dense>
               <v-col cols="6">
-                <v-text-field
-                  v-model="form.startTime"
-                  type="date"
-                  label="开始日期"
-                  density="compact"
-                />
+                <v-menu v-model="startMenu" :close-on-content-click="false">
+                  <template #activator="{ props }">
+                    <v-text-field
+                      v-bind="props"
+                      v-model="form.startTime"
+                      label="开始日期"
+                      readonly
+                      density="compact"
+                    />
+                  </template>
+
+                  <v-date-picker
+                    v-model="form.startTime"
+                    @update:model-value="onStartDateSelect"
+                  />
+                </v-menu>
               </v-col>
+
               <v-col cols="6">
-                <v-text-field
-                  v-model="form.endTime"
-                  type="date"
-                  label="结束日期"
-                  density="compact"
-                />
+                <v-menu v-model="endMenu" :close-on-content-click="false">
+                  <template #activator="{ props }">
+                    <v-text-field
+                      v-bind="props"
+                      v-model="form.endTime"
+                      label="结束日期"
+                      readonly
+                      density="compact"
+                    />
+                  </template>
+
+                  <v-date-picker
+                    v-model="form.endTime"
+                    @update:model-value="onEndDateSelect"
+                  />
+                </v-menu>
               </v-col>
             </v-row>
 
-           <v-alert
-            color="#d17b4d"
-            variant="text"
-            density="compact"
-            class="mb-2 border"
-          >
-            <v-icon size="small">mdi-star-off-outline</v-icon>
-            号为隐藏选手
-          </v-alert>
+            <v-alert
+              color="#d17b4d"
+              variant="text"
+              density="compact"
+              class="mb-2 border"
+            >
+              <v-icon size="small">mdi-star-off-outline</v-icon>
+              号为隐藏选手
+            </v-alert>
 
-          <v-sheet
-            border
-            rounded
-            class="mt-1 pa-2 overflow-y-auto"
-            height="300"
-          >
-            <v-list density="compact">
-              <v-list-item
-                v-for="p in playerStore.list"
-                :key="p.playername"
-                :active="isSelected(p.playername)"
-                color="primary"
-                @click="selectPlayer(p.playername)"
-              >
-                <template #prepend>
-                  <v-icon
-                    :icon="p.is_hide ? 'mdi-star-off-outline' : 'mdi-star'"
-                  />
-                </template>
+            <v-sheet
+              border
+              rounded
+              class="mt-1 pa-2 overflow-y-auto"
+              height="300"
+            >
+              <v-list density="compact">
+                <v-list-item
+                  v-for="p in playerStore.list"
+                  :key="p.playername"
+                  :active="isSelected(p.playername)"
+                  color="primary"
+                  @click="selectPlayer(p.playername)"
+                >
+                  <template #prepend>
+                    <v-icon
+                      :icon="p.is_hide ? 'mdi-star-off-outline' : 'mdi-star'"
+                    />
+                  </template>
 
-                <v-list-item-title>
-                  {{ p.playername }}
-                </v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-sheet>
+                  <v-list-item-title>
+                    {{ p.playername }}
+                  </v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-sheet>
 
             <!-- Shoe / Round -->
             <v-row dense class="mt-4" align="center">
@@ -120,8 +142,18 @@
               :disabled="!queryMode"
               @click="query"
             >
-              {{ queryLabel }}
-          </v-btn>
+              {{queryLabel}}
+            </v-btn>
+
+            <v-btn
+              block
+              color="#d17b4d"
+              class="mt-2"
+              :disabled="!canQueryByNameShoeRound"
+              @click="queryByNameShoeRound"
+            >
+              按天按靴查询单个选手
+            </v-btn>
           </v-col>
 
           <!-- ========== RIGHT PANEL ========== -->
@@ -175,6 +207,9 @@ const groupStore = useGroupPullStore();
 const rows = ref([]);
 const tableMode = ref("normal");
 
+const startMenu = ref(false);
+const endMenu = ref(false);
+
 const form = ref({
   shoe: null,
   round: null,
@@ -183,27 +218,62 @@ const form = ref({
   is_contains_virtual: 0,
 });
 
-const groupNickName = computed(() => groupStore.setting.group_nickname);
 const selectedName = computed(() => playerStore.selected?.playername);
-const hasDateRange = computed(() => !!form.value.startTime && !!form.value.endTime);
+const groupNickName = computed(
+  () => groupStore.setting?.group_nickname ?? null,
+);
+
+const formatDate = (date) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const onStartDateSelect = (val) => {
+  form.value.startTime = formatDate(val);
+  startMenu.value = false;
+};
+
+const onEndDateSelect = (val) => {
+  form.value.endTime = formatDate(val);
+  endMenu.value = false;
+};
+
+const hasDateRange = computed(
+  () => !!form.value.startTime && !!form.value.endTime,
+);
 
 const queryMode = computed(() => {
-  const { shoe, round } = form.value;
+  const { shoe,round } = form.value;
 
-  if (selectedName.value && shoe && round) return "BY_NAME_SHOE_ROUND";
-  if (hasDateRange.value && selectedName.value && !shoe) return "SINGLE";
-  if (hasDateRange.value && shoe && !selectedName.value) return "BY_SHOE";
+  if (hasDateRange.value && selectedName.value && !shoe ) return "SINGLE";
+  if (hasDateRange.value && shoe && round && !selectedName.value) return "BY_SHOE";
   if (hasDateRange.value && !selectedName.value && !shoe) return "ALL";
 
   return null;
 });
 
-const queryLabel = computed(() => ({
-  SINGLE: "按天查询单个选手",
-  ALL: "按天查询所有选手",
-  BY_SHOE: "按天查某靴所有选手",
-  BY_NAME_SHOE_ROUND: "按天按靴查询单个选手",
-}[queryMode.value] || "查询"));
+const canQueryByNameShoeRound = computed(() => {
+  return (
+    selectedName.value &&
+    form.value.shoe &&
+    form.value.round &&
+    form.value.startTime &&
+    form.value.endTime
+  );
+});
+
+const queryLabel = computed(
+  () =>
+    ({
+      SINGLE: "按天查询单个选手",
+      ALL: "按天查询所有选手",
+      BY_SHOE: "按天查某靴所有选手",
+    })[queryMode.value] || "查询",
+);
 
 const headersMap = {
   normal: [
@@ -238,6 +308,7 @@ const selectPlayer = (name) => {
 
 const reloadPlayers = async () => {
   await playerStore.fetchPlayers();
+  playerStore.selected = null;
 };
 
 const basePayload = () => ({
@@ -246,8 +317,6 @@ const basePayload = () => ({
   endTime: form.value.endTime,
   is_contains_virtual: form.value.is_contains_virtual,
 });
-
-
 
 const query = async () => {
   rows.value = [];
@@ -274,15 +343,6 @@ const query = async () => {
         res = await queryPlayerDetails({
           ...basePayload(),
           shoe: form.value.shoe,
-        });
-        break;
-
-      case "BY_NAME_SHOE_ROUND":
-        tableMode.value = "byNameShoe";
-        res = await queryPlayerDetailsByNameShoe({
-          ...basePayload(),
-          name: selectedName.value,
-          shoe: form.value.shoe,
           round: form.value.round,
         });
         break;
@@ -291,13 +351,40 @@ const query = async () => {
         notify.error("查询条件不完整");
         return;
     }
-     rows.value = res.data || [];
+    rows.value = res.data || [];
     notify.success(res.msg);
   } catch (err) {
     console.error(err);
     notify.error("查询失败");
   }
 };
+
+const queryByNameShoeRound = async () => {
+  if (!canQueryByNameShoeRound.value) {
+    notify.error("请完整选择日期、选手、靴号和局号");
+    return;
+  }
+
+  rows.value = [];
+  tableMode.value = "byNameShoe";
+
+  try {
+    const res = await queryPlayerDetailsByNameShoe({
+      ...basePayload(),
+      name: selectedName.value,
+      shoe: form.value.shoe,
+      round: form.value.round,
+    });
+
+    rows.value = res.data || [];
+    notify.success(res.msg);
+
+  } catch (err) {
+    console.error(err);
+    notify.error("查询失败");
+  }
+};
+
 
 const reset = () => {
   rows.value = [];
@@ -308,18 +395,18 @@ const reset = () => {
     endTime: "",
     is_contains_virtual: 0,
   };
-   playerStore.clearSelected();
+  playerStore.clearSelected();
 };
 
 const close = () => {
   model.value = false;
 };
 
-watch(model, async (open)=>{
-  if(!open) {
+watch(model, async (open) => {
+  if (!open) {
     reset();
     return;
   }
   await reloadPlayers();
-})
+});
 </script>
