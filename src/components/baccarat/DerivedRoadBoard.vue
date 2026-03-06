@@ -51,8 +51,8 @@ const props = defineProps({
   road: { type: Array, required: true }, // 2D grid
   type: { type: String, required: true }, // bigEye / small / cockroach
   maxRows: { type: Number, default: 6 },
-  defaultCols: { type: Number, default: 40 },
-  cellWidth: { type: Number, default: 28 },
+  defaultCols: { type: Number, default: 80 },
+  cellWidth: { type: Number, default: 18 },
 });
 
 const roadEl = ref(null);
@@ -105,13 +105,21 @@ watch(
 }
 
 .cell {
-  width: 28px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  border: 1px solid #e0e0e0;
+  /* border: 1px solid #e0e0e0; */
+}
+
+.column .cell:nth-child(2n) {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.column:nth-child(2n) .cell {
+  border-right: 1px solid #e0e0e0;
 }
 
 /* ===== Big Eye: dot ===== */
@@ -159,7 +167,7 @@ watch(
   width: 100%;
   height: 100%;
   border-top: 2px solid;
-  transform: rotate(45deg);
+  transform: rotate(-45deg);
 }
 .red-slash::before {
   border-color: #d32f2f;
