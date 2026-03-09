@@ -102,16 +102,6 @@ const fetchTableData = async () => {
       betMap.set(r.name, r.bet_detail ?? {});
     });
 
-    // let totals = {
-    //   bank: 0,
-    //   bankPair: 0,
-    //   player: 0,
-    //   playerPair: 0,
-    //   tie: 0,
-    //   lucky6: 0,
-    //   perfect: 0,
-    // };
-
     const totals = emptyTotals();
 
     const rows = players.value.map((p) => {

@@ -20,10 +20,15 @@
 
       <v-card-text class="pa-5 h-100 table-bg">
         <v-row dense class="mb-1">
-          <v-col cols="6">
+          <v-col cols="7">
             <BeadRoad :road="store.beadRoad" />
           </v-col>
-          <v-col cols="6"> </v-col>
+          <v-col cols="5">
+            <v-row>
+              <v-col cols="6"><StatsCard /></v-col>
+              <v-col cols="6"><DesCard /></v-col>
+            </v-row> 
+          </v-col>
         </v-row>
         <!-- Big Road -->
         <BigRoad :road="store.bigRoad" class="mb-1"/>
@@ -51,6 +56,8 @@ import { useResultSettingStore } from "@/stores/resultsetting.store";
 import BigRoad from "@/components/baccarat/BigRoad.vue";
 import BeadRoad from "@/components/baccarat/BeadRoad.vue";
 import DerivedRoadBoard from "@/components/baccarat/DerivedRoadBoard.vue";
+import StatsCard from "@/components/baccarat/StatsCard.vue";
+import DesCard from "@/components/baccarat/DesCard.vue";
 const model = defineModel({ type: Boolean });
 const store = useResultSettingStore();
 </script>

@@ -12,12 +12,13 @@ import {
   buildLogicalBigRoad,
   buildBeadRoad,
 } from "@/composables/useBigRoad";
+import { buildBaccaratStatistics } from "@/composables/useBaccaratStatistics";
 
 import { DerivedRoad } from "@/composables/DerivedRoad";
 import { buildDerivedBigRoad } from "@/composables/useDerivedRoadGrid";
-import { useNotify } from "@/composables/useNotifiy"
+import { useNotify } from "@/composables/useNotifiy";
 
-const notify = useNotify()
+const notify = useNotify();
 
 function createDefaultSetting() {
   return {
@@ -57,6 +58,10 @@ export const useResultSettingStore = defineStore("result", {
     values(state) {
       if (!state.info.gameHistory) return [];
       return parseGameHistory(state.info.gameHistory);
+    },
+
+    statistics() {
+      return buildBaccaratStatistics(this.values);
     },
 
     rawBigRoad() {
@@ -117,7 +122,7 @@ export const useResultSettingStore = defineStore("result", {
         this.isFetched = true;
       } catch (err) {
         // console.warn("Result setting fetch failed:", err.message);
-        notify.error(err.message)
+        notify.error(err.message);
         return;
       } finally {
         this.loading = false;

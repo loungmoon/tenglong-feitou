@@ -162,11 +162,11 @@ watch(
 .blue-slash::before {
   content: "";
   position: absolute;
-  top: 0;
+  top: 20%;
   left: 0;
   width: 100%;
   height: 100%;
-  border-top: 2px solid;
+  border-top: 3px solid;
   transform: rotate(-45deg);
 }
 .red-slash::before {
