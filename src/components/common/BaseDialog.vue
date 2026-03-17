@@ -78,7 +78,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
   confirmBtn: { type:String, default: '确定' },
   confirmDisabled:{ type:Boolean, default:false },
-  persistent: {type: Boolean, default: false }
+  persistent: {type: Boolean, default: true }
 })
 
 const emit = defineEmits(['confirm','close'])

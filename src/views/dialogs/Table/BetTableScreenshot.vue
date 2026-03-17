@@ -92,6 +92,34 @@ const handleConfirm = async () => {
     loading.value = false
   }
 }
+
+// const handleConfirm = async () => {
+//   if (!imageBlob.value) return
+
+//   loading.value = true
+
+//   try {
+
+//     const formData = new FormData()
+//     formData.append("file", imageBlob.value, "bet-table.png")
+
+//     await fetch("http://localhost:3000/send-image", {
+//       method: "POST",
+//       body: formData
+//     })
+
+//     model.value = false
+
+//   } catch (e) {
+
+//     console.error("Telegram send error:", e)
+
+//   } finally {
+
+//     loading.value = false
+
+//   }
+// }
 </script>
 
 <style scoped>
