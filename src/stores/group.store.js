@@ -41,13 +41,13 @@ export const useGroupPullStore = defineStore("group", {
 
   actions: {
     async fetchSetting({ force = false } = {}) {
-      if (this.isFetched && !force) return;
+      if (this.isFetched && !force) return null;
 
       const nickname = this.setting.group_nickname;
 
       if (!nickname) {
         this.isFetched = true;
-        return;
+        return null;
       }
 
       this.loading = true;
@@ -60,7 +60,7 @@ export const useGroupPullStore = defineStore("group", {
         const row = res.data?.[0] || null;
         if (!row) {
           this.isFetched = true;
-          return;
+          return null;
         }
 
         const normalized = normalizeResponse(row);
@@ -73,6 +73,8 @@ export const useGroupPullStore = defineStore("group", {
         setCachedNickname(this.setting.group_nickname);
 
         this.isFetched = true;
+
+        return normalized;
       } finally {
         this.loading = false;
       }

@@ -121,8 +121,8 @@ export const useResultSettingStore = defineStore("result", {
         }
         this.isFetched = true;
       } catch (err) {
-        // console.warn("Result setting fetch failed:", err.message);
-        notify.error(err.message);
+        console.warn("Result setting fetch failed:", err.message);
+        // notify.error(err.message);
         return;
       } finally {
         this.loading = false;
