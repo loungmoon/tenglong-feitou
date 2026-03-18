@@ -101,7 +101,7 @@ const fetchTableData = async () => {
   // if (!players.value.length) return;
   if (fetching) return;
 
-  if (!groupNickName.value && !players.value.length) {
+  if (!groupNickName.value || !players.value.length) {
     items.value = [];
     return;
   }
