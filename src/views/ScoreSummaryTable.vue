@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref,computed,watch,onMounted } from "vue";
+import { ref,computed,watch,onMounted,onBeforeUnmount } from "vue";
 import { getPlayerScoreDataApi } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
 import { useGroupPullStore } from "@/stores/group.store";
@@ -51,6 +51,10 @@ const betScoreRef = ref(null);
 const loading = ref(false);
 const items = ref([]);
 
+let intervalId = null;
+let fetching = false;
+const firstLoad = ref(true);
+
 const players = computed(() => playStore.userList);
 const groupNickName = computed(() => grpupStore.setting.group_nickname)
 const shoe = computed(() => resultStore.info.shoe);
@@ -65,13 +69,34 @@ const headers = [
   { title: "总积分", key: "total_points", align: "center" },
 ];
 
+//(NO JUMP)
+const updateItemsSmoothly = (newRows) => {
+  if (items.value.length === 0) {
+    items.value = newRows;
+    return;
+  }
+
+  newRows.forEach((newRow, index) => {
+    if (!items.value[index]) {
+      items.value[index] = newRow;
+    } else {
+      Object.assign(items.value[index], newRow);
+    }
+  });
+};
+
 const fetchScoreData = async () => {
-  if (!groupNickName.value || !shoe.value || !round.value || !players.value.length ) {
+   if (fetching) return;
+
+  if (!groupNickName.value || !players.value.length ) {
     items.value = [];
     return;
   };
 
-  loading.value = true;
+  // loading.value = true;
+  fetching = true;
+
+  if (firstLoad.value) loading.value = true;
 
   try {
     const res = await getPlayerScoreDataApi({
@@ -87,7 +112,7 @@ const fetchScoreData = async () => {
 
     const scoreMap = new Map();
     res.data.forEach((r) => {
-      scoreMap.set(r.username, r);
+      scoreMap.set(r.userName, r);
     });
 
     const totals = {
@@ -116,22 +141,58 @@ const fetchScoreData = async () => {
     });
 
     rows.push({ name: "合计", ...totals });
+    
+    uiStore.setTotals(totals);
 
-    items.value = rows;
+    updateItemsSmoothly(rows);
+    firstLoad.value = false;
+    // items.value = rows;
   } catch (err) {
     console.error(err);
     notify.error("获取积分数据失败");
   } finally {
     loading.value = false;
+    fetching = false;
   }
 };
 
+const startPolling = () => {
+  if (intervalId) return; // prevent duplicate intervals
+
+  intervalId = setInterval(() => {
+    if (groupNickName.value && shoe.value && round.value) {
+      fetchScoreData();
+    }
+  }, 10000);
+};
+
+const stopPolling = () => {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+};
+
+// watch(
+//   [groupNickName, shoe , round],
+//   () => {
+//     items.value = [];
+//   } 
+// )
+
 watch(
-  [groupNickName, shoe , round],
-  () => {
-    items.value = [];
-  } 
-)
+  [groupNickName, shoe, round],
+  ([g, s, r]) => {
+    if (g && s && r) {
+      fetchScoreData();
+      startPolling();
+    } else {
+      stopPolling();
+      items.value = [];
+    }
+  },
+  { immediate: true }
+);
 
 watch(
   () => [
@@ -142,6 +203,10 @@ watch(
   fetchScoreData,
   { immediate: true }
 );
+
+onBeforeUnmount(() => {
+  stopPolling();
+});
 
 onMounted(() => {
   uiStore.scoreTableEl = betScoreRef.value;

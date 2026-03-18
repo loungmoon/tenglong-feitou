@@ -57,7 +57,7 @@ const loading = ref(false)
 const newNickname = ref("")
 const formRef = ref(null)
 
-const deskNumber = computed(() => store.setting.desk_number)
+const deskNumber = computed(() => store.info.desk_number)
 const groupNickName = computed(() => groupStore.setting.group_nickname);
 
 const newNicknameRules = computed(() => [

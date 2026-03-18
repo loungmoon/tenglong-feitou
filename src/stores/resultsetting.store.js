@@ -34,6 +34,7 @@ function createDefaultInfo() {
     shoe: null,
     round: null,
     gameHistory: "",
+    desk_number: "",
   };
 }
 
@@ -156,7 +157,7 @@ export const useResultSettingStore = defineStore("result", {
     },
 
     async getDeskInfo() {
-      if (!this.setting.desk_number) return;
+      // if (!this.setting.desk_number) return;
 
       const group_nickname = this.groupNickname();
       if (!group_nickname) return;
@@ -166,7 +167,7 @@ export const useResultSettingStore = defineStore("result", {
       try {
         const { data } = await deskInfo({
           group_nickname,
-          desk_number: this.setting.desk_number,
+          // desk_number: this.setting.desk_number,
         });
 
         this.info = {
@@ -174,6 +175,7 @@ export const useResultSettingStore = defineStore("result", {
           shoe: data?.shoe ?? null,
           round: data?.round ?? null,
           gameHistory: data?.gameHistory ?? this.info.gameHistory,
+          desk_number: data?.desk_number ?? null,
         };
       } catch (err) {
         console.warn("Result DeskInfo fetch failed:", err.message);

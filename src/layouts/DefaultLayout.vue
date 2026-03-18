@@ -52,7 +52,7 @@ onMounted(async () => {
 
     if (!groupStore.isReady) return;
 
-    await resultstore.fetchSetting();
+    // await resultstore.fetchSetting();
     await resultstore.getDeskInfo();
     await playerStore.fetchPlayers();
   } catch (error) {
@@ -70,7 +70,7 @@ watch(
       resultstore.reset();
       playerStore.reset();
 
-      await resultstore.fetchSetting({ force: true });
+      // await resultstore.fetchSetting({ force: true });
       await resultstore.getDeskInfo();
       await playerStore.fetchPlayers(true);
     } catch (error) {}

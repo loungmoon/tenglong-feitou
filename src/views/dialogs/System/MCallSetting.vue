@@ -8,15 +8,8 @@
     confirm-btn="保存设置"
     @confirm="save"
   >
-    <div
-      v-if="nicknameLoading"
-      class="nickname-loader-overlay"
-    >
-      <v-progress-circular
-        indeterminate
-        color="primary"
-        size="64"
-      />
+    <div v-if="nicknameLoading" class="nickname-loader-overlay">
+      <v-progress-circular indeterminate color="primary" size="64" />
     </div>
 
     <v-form ref="formRef" v-model="isValid">
@@ -43,7 +36,7 @@
               @blur="handleNicknameFetch"
               @keyup.enter="handleNicknameFetch"
             >
-            <!-- <template #append>
+              <!-- <template #append>
                 <v-btn
                   icon="mdi-magnify"
                   size="small"
@@ -210,6 +203,14 @@ function getDefaultForm(nickname = "") {
   };
 }
 
+// function debounce(fn, delay = 500) {
+//   let timer;
+//   return (...args) => {
+//     clearTimeout(timer);
+//     timer = setTimeout(() => fn(...args), delay);
+//   };
+// }
+
 const requiredData = [
   (v) => !!v || "必填",
   (v) => (v && v.trim().length > 0) || "不能为空",
@@ -251,6 +252,34 @@ const handleNicknameFetch = async () => {
     nicknameLoading.value = false;
   }
 };
+
+// watch(
+//   () => form.value.group_nickname,
+//   debounce(async (val) => {
+//     if (!val || !val.trim()) return;
+//     if (val === originalNickname) return;
+
+//     try {
+//       nicknameLoading.value = true;
+
+//       store.setting.group_nickname = val;
+
+//       const data = await store.fetchSetting({ force: true });
+
+//       if (data) {
+//         // ✅ has data
+//         form.value = { ...store.setting };
+//       } else {
+//         // ✅ no data → CLEAR FORM
+//         form.value = getDefaultForm(val);
+//       }
+
+//       originalNickname = val;
+//     } finally {
+//       nicknameLoading.value = false;
+//     }
+//   }, 500),
+// );
 
 const save = async () => {
   const result = await formRef.value?.validate();

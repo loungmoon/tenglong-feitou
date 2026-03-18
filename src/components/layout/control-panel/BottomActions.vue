@@ -1,27 +1,5 @@
 <template>
   <v-row dense>
-    <!-- Left -->
-    <v-col cols="6">
-      <v-btn
-        block
-        color="#d17b4d"
-        class="mb-2"
-        @click="dlgImport = true"
-      >
-        导入表格
-      </v-btn>
-
-      <v-btn
-        block
-        height="80"
-        color="#d17b4d"
-        class="text-caption font-weight-medium"
-        @click="dlgLottery = true"
-      >
-        开奖计算
-      </v-btn>
-    </v-col>
-
     <!-- Right -->
     <v-col cols="6">
       <v-btn
@@ -32,7 +10,8 @@
       >
         投注表截图
       </v-btn>
-
+    </v-col>
+    <v-col cols="6">
       <v-btn
         block
         color="#d17b4d"
@@ -42,13 +21,34 @@
         分数表截图
       </v-btn>
 
-      <v-btn
+      <!-- <v-btn
         block
         color="#d17b4d"
         @click="dlgNextRound = true"
       >
         进入下局
+      </v-btn> -->
+    </v-col>
+     <!-- Left -->
+    <v-col cols="12">
+      <v-btn
+        block
+        color="#d17b4d"
+        class="mb-2"
+        @click="dlgImport = true"
+      >
+        导入表格
       </v-btn>
+
+      <!-- <v-btn
+        block
+        height="80"
+        color="#d17b4d"
+        class="text-caption font-weight-medium"
+        @click="dlgLottery = true"
+      >
+        开奖计算
+      </v-btn> -->
     </v-col>
   </v-row>
 

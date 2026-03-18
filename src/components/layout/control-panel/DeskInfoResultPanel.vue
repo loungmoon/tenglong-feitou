@@ -23,8 +23,8 @@
       </v-row>
 
       <div class="text-center text-primary my-5">
-        <div>非虚拟剩余分汇总: 59285</div>
-        <div>非虚拟初始分汇总: 80400</div>
+        <div>非虚拟剩余分汇总: {{totals.score}}</div>
+        <div>非虚拟初始分汇总: {{totals.raw_score}}</div>
       </div>
 
       <v-row class="d-flex justify-between" dense>
@@ -246,6 +246,7 @@ import { useResultSettingStore } from "@/stores/resultsetting.store";
 import { useNotify } from "@/composables/useNotifiy";
 import { drawLotteryApi } from "@/api/opt.api";
 import { useGroupPullStore } from "@/stores/group.store";
+import { useUiStore } from "@/stores/ui.store";
 import {
   NextShoe,
   NextRound,
@@ -257,6 +258,7 @@ import {
 const notify = useNotify();
 const store = useResultSettingStore();
 const groupStore = useGroupPullStore();
+const uiStore = useUiStore();
 
 const dlgNextShoe = ref(false);
 const dlgNextRound = ref(false);
@@ -284,9 +286,9 @@ const anyPair = ref(false);
 
 const hasMainResult = computed(() => !!mainResult.value);
 
-const deskNumber = computed(() => store.setting.desk_number ?? null);
+const deskNumber = computed(() => store.info.desk_number ?? null);
 const groupNickName = computed(() => groupStore.setting.group_nickname);
-
+const totals = computed(()=> uiStore.totals);
 watch(
   () => store.info,
   (info) => {

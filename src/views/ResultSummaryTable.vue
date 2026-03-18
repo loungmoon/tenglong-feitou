@@ -33,26 +33,32 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted,onBeforeUnmount } from "vue";
 import { getPlayerBetDataApi } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
 import { useGroupPullStore } from "@/stores/group.store";
 import { usePlayerStore } from "@/stores/player.store";
+import { useResultSettingStore } from "../stores/resultsetting.store";
 import { useUiStore } from "@/stores/ui.store";
 
 const notify = useNotify();
 const groupStore = useGroupPullStore();
 const playerStore = usePlayerStore();
 const uiStore = useUiStore();
+const resultStore = useResultSettingStore();
 
 const betTableRef = ref(null);
 const loading = ref(false);
 const items = ref([]);
 
+let intervalId = null;
+let fetching = false;
+const firstLoad = ref(true);
 
 const players = computed(() => playerStore.userList);
-
 const groupNickName = computed(()=> groupStore.setting.group_nickname)
+const shoe = computed(() => resultStore.info.shoe);
+const round = computed(() => resultStore.info.round);
 
 const headers = [
   { title: "姓名", key: "name", width: 90 },
@@ -75,24 +81,41 @@ const emptyTotals = () => ({
   perfect: 0,
 });
 
+//(NO JUMP)
+const updateItemsSmoothly = (newRows) => {
+  if (items.value.length === 0) {
+    items.value = newRows;
+    return;
+  }
+
+  newRows.forEach((newRow, index) => {
+    if (!items.value[index]) {
+      items.value[index] = newRow;
+    } else {
+      Object.assign(items.value[index], newRow);
+    }
+  });
+};
+
 const fetchTableData = async () => {
   // if (!players.value.length) return;
+  if (fetching) return;
 
-  if (!groupNickName.value) {
+  if (!groupNickName.value && !players.value.length) {
     items.value = [];
     return;
   }
 
-  if (!players.value.length) {
-    items.value = [];
-    return;
-  }
+  // loading.value = true;
+  fetching = true;
 
-  loading.value = true;
+  if (firstLoad.value) loading.value = true;
 
   try {
     const res = await getPlayerBetDataApi({
-      group_nickname: groupNickName.value
+      group_nickname: groupNickName.value,
+      shoe: shoe.value,
+      round: round.value,
     });
     if (res.code !== 200) return;
 
@@ -125,19 +148,53 @@ const fetchTableData = async () => {
 
     rows.push({ name: "合计", ...totals });
 
-    items.value = rows;
+    // items.value = rows;
+    updateItemsSmoothly(rows);
+    firstLoad.value = false;
   } catch (err) {
     console.error(err);
     notify.error("获取投注数据失败");
   } finally {
     loading.value = false;
+    fetching = false;
   }
 };
 
-watch(groupNickName,
-  () => {
-    items.value =[];
+const startPolling = () => {
+  if (intervalId) return; // prevent duplicate intervals
+
+  intervalId = setInterval(() => {
+    if (groupNickName.value && shoe.value && round.value) {
+      fetchTableData();
+    }
+  }, 10000);
+};
+
+const stopPolling = () => {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
   }
+};
+
+// watch(groupNickName,
+//   () => {
+//     items.value =[];
+//   }
+// );
+
+watch(
+  [groupNickName, shoe, round],
+  ([g, s, r]) => {
+    if (g && s && r) {
+      fetchTableData();
+      startPolling();
+    } else {
+      stopPolling();
+      items.value = [];
+    }
+  },
+  { immediate: true }
 );
 
 watch(
@@ -147,6 +204,10 @@ watch(
   },
   { immediate: true }
 );
+
+onBeforeUnmount(() => {
+  stopPolling();
+});
 
 onMounted(() => {
   uiStore.betTableEl = betTableRef.value;
