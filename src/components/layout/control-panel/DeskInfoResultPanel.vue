@@ -23,8 +23,8 @@
       </v-row>
 
       <div class="text-center text-primary my-5">
-        <div>非虚拟剩余分汇总: {{totals.score}}</div>
-        <div>非虚拟初始分汇总: {{totals.raw_score}}</div>
+        <div>非虚拟剩余分汇总: {{totals.total_score}}</div>
+        <div>非虚拟初始分汇总: {{totals.total_raw_score}}</div>
       </div>
 
       <v-row class="d-flex justify-between" dense>

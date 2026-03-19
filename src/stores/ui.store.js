@@ -7,8 +7,8 @@ export const useUiStore = defineStore("ui", {
     scoreTableEl: null,
 
     totals: {
-      score: 0,
-      raw_score: 0,
+      total_score: 0,
+      total_raw_score: 0,
     }
   }),
 
@@ -19,8 +19,8 @@ export const useUiStore = defineStore("ui", {
 
     resetTotals(){
       this.totals = {
-        score: 0,
-        raw_score: 0,
+        total_score: 0,
+        total_raw_score: 0,
       }
     }
   }

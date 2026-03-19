@@ -17,5 +17,5 @@ return api.post(`/data_query/get_player_score_data`,data);
 }
 
 export const getRemainScoreSummary = (data) => {
-return api.post(`/data_query/get_player_score_data`,data);
+return api.post(`/data_query/get_remaining_score_summary`,data);
 }

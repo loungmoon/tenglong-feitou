@@ -1,3 +1,4 @@
+<!-- ResultSummary.vue -->
 <template>
   <v-card>
      <div ref="betTableRef">
@@ -153,7 +154,7 @@ const fetchTableData = async () => {
     firstLoad.value = false;
   } catch (err) {
     console.error(err);
-    notify.error("获取投注数据失败");
+    // notify.error("获取投注数据失败");
   } finally {
     loading.value = false;
     fetching = false;

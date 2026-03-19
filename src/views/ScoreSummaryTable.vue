@@ -1,3 +1,4 @@
+<!-- ScoreSummary.vue -->
 <template>
   <v-card elevation="0">
     <div ref="betScoreRef">
@@ -15,7 +16,7 @@
       >
         <!-- Loading -->
         <template #loading>
-          <v-skeleton-loader type="table-row@7"/>
+          <v-skeleton-loader type="table-row@7" />
         </template>
 
         <!-- Name -->
@@ -33,8 +34,8 @@
 </template>
 
 <script setup>
-import { ref,computed,watch,onMounted,onBeforeUnmount } from "vue";
-import { getPlayerScoreDataApi } from "@/api/data.api";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { getPlayerScoreDataApi, getRemainScoreSummary } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
 import { useGroupPullStore } from "@/stores/group.store";
 import { usePlayerStore } from "../stores/player.store";
@@ -50,13 +51,14 @@ const uiStore = useUiStore();
 const betScoreRef = ref(null);
 const loading = ref(false);
 const items = ref([]);
+const totals = ref({});
 
 let intervalId = null;
 let fetching = false;
 const firstLoad = ref(true);
 
 const players = computed(() => playStore.userList);
-const groupNickName = computed(() => grpupStore.setting.group_nickname)
+const groupNickName = computed(() => grpupStore.setting.group_nickname);
 const shoe = computed(() => resultStore.info.shoe);
 const round = computed(() => resultStore.info.round);
 
@@ -86,12 +88,12 @@ const updateItemsSmoothly = (newRows) => {
 };
 
 const fetchScoreData = async () => {
-   if (fetching) return;
+  if (fetching) return;
 
-  if (!groupNickName.value || !players.value.length ) {
+  if (!groupNickName.value || !players.value.length) {
     items.value = [];
     return;
-  };
+  }
 
   // loading.value = true;
   fetching = true;
@@ -126,9 +128,7 @@ const fetchScoreData = async () => {
     const rows = players.value.map((p) => {
       const s = scoreMap.get(p.playername) ?? {};
 
-      Object.keys(totals).forEach(
-        (k) => (totals[k] += s[k] ?? 0)
-      );
+      Object.keys(totals).forEach((k) => (totals[k] += s[k] ?? 0));
 
       return {
         name: p.playername,
@@ -141,18 +141,38 @@ const fetchScoreData = async () => {
     });
 
     rows.push({ name: "合计", ...totals });
-    
-    uiStore.setTotals(totals);
+
+    // uiStore.setTotals(totals);
 
     updateItemsSmoothly(rows);
     firstLoad.value = false;
     // items.value = rows;
   } catch (err) {
     console.error(err);
-    notify.error("获取积分数据失败");
+    // notify.error("获取积分数据失败");
   } finally {
     loading.value = false;
     fetching = false;
+  }
+};
+
+const fetchTotals = async () => {
+   if (!groupNickName.value) {
+    return;
+  }
+  
+  try {
+    const res = await getRemainScoreSummary({
+      group_nickname: groupNickName.value,
+    });
+    if (res.code === 200) {
+      totals.value = res.data?.[0];
+      uiStore.setTotals(totals.value);
+    } else {
+      notify.error(res.msg);
+    }
+  } catch (err) {
+    console.error(err);
   }
 };
 
@@ -160,10 +180,12 @@ const startPolling = () => {
   if (intervalId) return; // prevent duplicate intervals
 
   intervalId = setInterval(() => {
-    if (groupNickName.value && shoe.value && round.value) {
-      fetchScoreData();
-    }
+    fetchScoreData();
+    fetchTotals();
   }, 10000);
+
+  fetchScoreData();
+  fetchTotals();
 };
 
 const stopPolling = () => {
@@ -177,31 +199,32 @@ const stopPolling = () => {
 //   [groupNickName, shoe , round],
 //   () => {
 //     items.value = [];
-//   } 
+//   }
 // )
 
 watch(
   [groupNickName, shoe, round],
   ([g, s, r]) => {
     if (g && s && r) {
-      fetchScoreData();
+      // fetchScoreData();
       startPolling();
     } else {
       stopPolling();
       items.value = [];
+      totals.value = {};
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
   () => [
-    players.value.map(p => p.playername).join(),
+    players.value.map((p) => p.playername).join(),
     shoe.value,
     round.value,
   ],
   fetchScoreData,
-  { immediate: true }
+  { immediate: true },
 );
 
 onBeforeUnmount(() => {
