@@ -15,3 +15,7 @@ export const getPlayerBetDataApi = (data) => {
 export const getPlayerScoreDataApi = (data) =>{
 return api.post(`/data_query/get_player_score_data`,data);
 }
+
+export const getRemainScoreSummary = (data) => {
+return api.post(`/data_query/get_player_score_data`,data);
+}

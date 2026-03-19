@@ -6,7 +6,7 @@
       >
         <div class="d-flex align-center">
           <v-icon class="mr-2" color="primary">mdi-chart-box</v-icon>
-          <span class="font-weight-bold">选手数据查询及统计</span>
+          <span class="font-weight-bold">场次可以改成靴</span>
         </div>
         <v-btn icon variant="text" @click="close">
           <v-icon>mdi-close</v-icon>
@@ -280,22 +280,23 @@ const headersMap = {
     { title: "选手", key: "username" },
     { title: "参考名称", key: "reference_name" },
     { title: "三宝盈利", key: "sb_yl" },
-    { title: "闲庄盈利", key: "sx_yl" },
-    { title: "三宝下注", key: "xml_sb" },
-    { title: "闲庄下注", key: "xml_sx" },
-    { title: "有效下注", key: "yxxz" },
+    { title: "三宝洗码量", key: "xml_sb" },
+    { title: "闲庄洗码量", key: "xml_zx" },
+    // { title: "有效下注", key: "yxxz" },
+    { title: "闲庄盈利", key:"zx_yl"},
   ],
   byNameShoe: [
     { title: "选手", key: "username" },
-    { title: "场次", key: "cc" },
-    { title: "局次", key: "jc" },
+    { title: "靴", key: "cc" },
     { title: "参考名称", key: "reference_name" },
-    { title: "三宝盈利", key: "sb_yl" },
-    { title: "闲庄盈利", key: "sx_yl" },
-    { title: "三宝下注", key: "xml_sb" },
-    { title: "闲庄下注", key: "xml_sx" },
-    { title: "有效下注", key: "yxxz" },
-  ],
+    // { title: "三宝盈利", key: "sb_yl" },
+    { title: "三宝下注", key: "sb_xz" },
+    { title: "三宝洗码量", key:"xml_sb" },
+    { title: "闲庄洗码量", key: "xml_sx" },
+    { title: "闲庄下注", key: "xz_xz" },
+    { title: "闲庄盈利", key: "xz_yl" },
+    // { title: "有效下注", key: "yxxz" },
+  ], 
 };
 
 const headers = computed(() => headersMap[tableMode.value]);
