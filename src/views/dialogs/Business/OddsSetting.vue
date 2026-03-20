@@ -261,24 +261,36 @@
                       :items="YES_NO"
                       required
                     />
-                    <v-text-field
+                    <!-- <v-text-field
                       v-model="form.pb_bet_calculation_Mode"
                       label="庄闲上盘计算模式"
                       density="compact"
                       variant="outlined"
                       clearable
                       :rules="required"
+                    /> -->
+                    <SelectField
+                      v-model="form.pb_bet_calculation_Mode"
+                      label="是否启用任意对子"
+                      :items="CALC_MODES"
+                      required
                     />
                   </v-col>
 
                   <v-col cols="6">
-                    <v-text-field
+                    <!-- <v-text-field
                       v-model="form.Integral_statistics_method"
                       label="积分统计方法"
                       density="compact"
                       variant="outlined"
                       clearable
                       :rules="required"
+                    /> -->
+                    <SelectField
+                      v-model="form.Integral_statistics_method"
+                      label="积分统计方法"
+                      :items="POINT_METHODS"
+                      required
                     />
                     <NumberField
                       v-model="form.default_exchange"
@@ -364,6 +376,26 @@ const ZERO_SETTINGS = [
   { label: "千", value: "千" },
   { label: "万", value: "万" },
 ];
+
+const POINT_METHODS = [
+  { label: "按有效流水", value: "按有效流水" },
+  { label: "按庄闲洗码", value: "按庄闲洗码" },
+  { label: "按庄闲 + 三宝洗码", value: "按庄闲 + 三宝洗码" },
+];
+
+const CALC_MODES = [
+  { label: "无", value: "无" },
+  { label: "四舍五入", value: "四舍五入" },
+  { label: "只舍不入", value: "只舍不入" },
+  { label: "上盘10%跟打", value: "FOLLOW_10" },
+  { label: "上盘20%跟打", value: "FOLLOW_20" },
+  { label: "上盘30%跟打", value: "FOLLOW_30" },
+  { label: "上盘40%跟打", value: "FOLLOW_40" },
+  { label: "上盘50%跟打", value: "FOLLOW_50" },
+  { label: "上盘60%跟打", value: "FOLLOW_60" },
+  { label: "上盘70%跟打", value: "FOLLOW_70" },
+  { label: "上盘80%跟打", value: "FOLLOW_80" },
+];
 const model = defineModel({ type: Boolean });
 const notify = useNotify();
 const groupStore = useGroupPullStore();
@@ -374,9 +406,7 @@ const isValid = ref(false);
 
 const groupNickname = computed(() => groupStore.setting.group_nickname);
 
-const required = [
-  v => !!v || "必需的"
-]
+const required = [(v) => !!v || "必需的"];
 
 const defaultForm = () => ({
   banker_odds: null,
@@ -407,7 +437,7 @@ const defaultForm = () => ({
   any_max_limit: null,
 
   points_exchange_ratio: null,
-  Integral_statistics_method: "",
+  Integral_statistics_method: "按有效流水",
   show_points: 0,
   default_exchange: null,
   pb_max_bet_amount: null,

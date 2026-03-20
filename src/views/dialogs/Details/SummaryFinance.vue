@@ -135,7 +135,7 @@
             />
 
             <!-- Query button -->
-            <v-btn
+            <!-- <v-btn
               block
               color="#d17b4d"
               class="mt-2"
@@ -143,6 +143,28 @@
               @click="query"
             >
               {{queryLabel}}
+            </v-btn> -->
+
+            <!-- 单个选手 -->
+            <v-btn
+              block
+              color="#d17b4d"
+              class="mt-2"
+              :disabled="!canQuerySingle"
+              @click="querySingle"
+            >
+              按天查询单个选手明细
+            </v-btn>
+
+            <!-- 所有选手 -->
+            <v-btn
+              block
+              color="#d17b4d"
+              class="mt-2"
+              :disabled="!canQueryAll"
+              @click="queryAll"
+            >
+              按天查询所有选手明细
             </v-btn>
 
             <v-btn
@@ -152,7 +174,18 @@
               :disabled="!canQueryByNameShoeRound"
               @click="queryByNameShoeRound"
             >
-              按天按靴查询单个选手
+              按天按靴查询单个选手明细
+            </v-btn>
+
+            <!-- 某靴所有选手 -->
+            <v-btn
+              block
+              color="#d17b4d"
+              class="mt-2"
+              :disabled="!canQueryByShoe"
+              @click="queryByShoe"
+            >
+              按天查某靴所有选手汇总
             </v-btn>
           </v-col>
 
@@ -215,7 +248,7 @@ const form = ref({
   round: null,
   startTime: "",
   endTime: "",
-  is_contains_virtual: 0,
+  is_contains_virtual: 1,
 });
 
 const selectedName = computed(() => playerStore.selected?.playername);
@@ -246,16 +279,6 @@ const hasDateRange = computed(
   () => !!form.value.startTime && !!form.value.endTime,
 );
 
-const queryMode = computed(() => {
-  const { shoe,round } = form.value;
-
-  if (hasDateRange.value && selectedName.value && !shoe ) return "SINGLE";
-  if (hasDateRange.value && shoe && round && !selectedName.value) return "BY_SHOE";
-  if (hasDateRange.value && !selectedName.value && !shoe) return "ALL";
-
-  return null;
-});
-
 const canQueryByNameShoeRound = computed(() => {
   return (
     selectedName.value &&
@@ -266,14 +289,23 @@ const canQueryByNameShoeRound = computed(() => {
   );
 });
 
-const queryLabel = computed(
-  () =>
-    ({
-      SINGLE: "按天查询单个选手",
-      ALL: "按天查询所有选手",
-      BY_SHOE: "按天查某靴所有选手",
-    })[queryMode.value] || "查询",
-);
+const canQuerySingle = computed(() => {
+  return hasDateRange.value && selectedName.value && !form.value.shoe;
+});
+
+const canQueryAll = computed(() => {
+  return hasDateRange.value && !selectedName.value && !form.value.shoe;
+});
+
+const canQueryByShoe = computed(() => {
+  return (
+    hasDateRange.value &&
+    form.value.shoe &&
+    form.value.round &&
+    !selectedName.value
+  );
+});
+
 
 const headersMap = {
   normal: [
@@ -283,7 +315,7 @@ const headersMap = {
     { title: "三宝洗码量", key: "xml_sb" },
     { title: "闲庄洗码量", key: "xml_zx" },
     // { title: "有效下注", key: "yxxz" },
-    { title: "闲庄盈利", key:"zx_yl"},
+    { title: "闲庄盈利", key: "zx_yl" },
   ],
   byNameShoe: [
     { title: "选手", key: "username" },
@@ -291,12 +323,12 @@ const headersMap = {
     { title: "参考名称", key: "reference_name" },
     // { title: "三宝盈利", key: "sb_yl" },
     { title: "三宝下注", key: "sb_xz" },
-    { title: "三宝洗码量", key:"xml_sb" },
+    { title: "三宝洗码量", key: "xml_sb" },
     { title: "闲庄洗码量", key: "xml_sx" },
     { title: "闲庄下注", key: "xz_xz" },
     { title: "闲庄盈利", key: "xz_yl" },
     // { title: "有效下注", key: "yxxz" },
-  ], 
+  ],
 };
 
 const headers = computed(() => headersMap[tableMode.value]);
@@ -319,43 +351,52 @@ const basePayload = () => ({
   is_contains_virtual: form.value.is_contains_virtual,
 });
 
-const query = async () => {
+
+const querySingle = async () => {
+  tableMode.value = "normal";
   rows.value = [];
 
   try {
-    let res;
+    const res = await queryPlayerDetails({
+      ...basePayload(),
+      name: selectedName.value,
+    });
 
-    switch (queryMode.value) {
-      case "SINGLE":
-        tableMode.value = "normal";
-        res = await queryPlayerDetails({
-          ...basePayload(),
-          name: selectedName.value,
-        });
-        break;
-
-      case "ALL":
-        tableMode.value = "normal";
-        res = await queryPlayerDetails(basePayload());
-        break;
-
-      case "BY_SHOE":
-        tableMode.value = "normal";
-        res = await queryPlayerDetails({
-          ...basePayload(),
-          shoe: form.value.shoe,
-          round: form.value.round,
-        });
-        break;
-
-      default:
-        notify.error("查询条件不完整");
-        return;
-    }
     rows.value = res.data || [];
     notify.success(res.msg);
   } catch (err) {
-    console.error(err);
+    notify.error("查询失败");
+  }
+};
+
+const queryAll = async () => {
+  tableMode.value = "normal";
+  rows.value = [];
+
+  try {
+    const res = await queryPlayerDetails(basePayload());
+
+    rows.value = res.data || [];
+    notify.success(res.msg);
+  } catch (err) {
+    notify.error("查询失败");
+  }
+};
+
+const queryByShoe = async () => {
+  tableMode.value = "normal";
+  rows.value = [];
+
+  try {
+    const res = await queryPlayerDetails({
+      ...basePayload(),
+      shoe: form.value.shoe,
+      round: form.value.round,
+    });
+
+    rows.value = res.data || [];
+    notify.success(res.msg);
+  } catch (err) {
     notify.error("查询失败");
   }
 };
@@ -379,13 +420,11 @@ const queryByNameShoeRound = async () => {
 
     rows.value = res.data || [];
     notify.success(res.msg);
-
   } catch (err) {
     console.error(err);
     notify.error("查询失败");
   }
 };
-
 
 const reset = () => {
   rows.value = [];

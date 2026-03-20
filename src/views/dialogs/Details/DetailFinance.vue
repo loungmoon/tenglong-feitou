@@ -1,27 +1,15 @@
 <template>
-  <v-dialog
-    v-model="model"
-    max-width="1000"
-    persistent
-  >
+  <v-dialog v-model="model" max-width="1000" persistent>
     <v-card>
-
       <!-- Header -->
       <v-card-title class="bg-grey-lighten-4">
         <div class="d-flex align-center w-100">
           <v-icon class="mr-2">mdi-cog</v-icon>
-          <span class="text-subtitle-1 font-weight-medium">
-            每局盈亏明细
-          </span>
+          <span class="text-subtitle-1 font-weight-medium"> 每局盈亏明细 </span>
 
           <v-spacer />
 
-          <v-btn
-            icon
-            variant="text"
-            size="small"
-            @click="model = false"
-          >
+          <v-btn icon variant="text" size="small" @click="model = false">
             <v-icon size="18">mdi-close</v-icon>
           </v-btn>
         </div>
@@ -30,20 +18,15 @@
       <!-- Body -->
       <v-card-text>
         <v-row>
-
-          <!-- Left: Filters & Actions -->
+          <!-- Left: Filters -->
           <v-col cols="12" md="4">
             <v-card class="pa-3">
-
-              <!-- Date -->
-              <v-menu
-                v-model="dateMenu"
-                :close-on-content-click="false"
-              >
+              <!-- Date Picker -->
+              <v-menu v-model="dateMenu" :close-on-content-click="false">
                 <template #activator="{ props }">
                   <v-text-field
                     v-bind="props"
-                    v-model="date"
+                    :model-value="formattedDate"
                     label="日期"
                     density="compact"
                     variant="outlined"
@@ -59,145 +42,189 @@
               </v-menu>
 
               <!-- Shoe & Round -->
-              <v-row dense class="mt-2" align="center">
-                <span class="text-body-2 mr-1">第</span>
-
-                <v-select
-                  v-model="shoe"
-                  :items="shoes"
+              <v-row dense class="mt-4" align="center">
+                <span>第</span>
+                <v-text-field
+                  v-model="form.shoe"
+                  type="number"
                   density="compact"
-                  variant="outlined"
-                  hide-details
+                  style="width: 80px"
+                  clearable
                 />
-
-                <span class="text-body-2 mx-1">靴</span>
-
-                <v-select
-                  v-model="round"
-                  :items="rounds"
+                <span class="mx-1">靴</span>
+                <v-text-field
+                  v-model="form.round"
+                  type="number"
                   density="compact"
-                  variant="outlined"
-                  hide-details
-                 
+                  style="width: 80px"
+                  clearable
                 />
-
-                <span class="text-body-2 ml-1">局</span>
+                <span>局</span>
               </v-row>
 
-              <!-- Actions -->
-              <v-btn
-                block
-                color="warning"
-                class="mt-4"
-                @click="changeTable('summary')"
-              >
+              <!-- Buttons -->
+              <v-btn block color="warning" class="mt-4" @click="getDetails">
                 查询下注选手明细
               </v-btn>
-
-              <v-btn
-                block
-                color="grey"
-                variant="flat"
-                class="mt-2"
-                @click="changeTable('result')"
-              >
-                开奖结果
-              </v-btn>
-
             </v-card>
           </v-col>
 
           <!-- Right: Table -->
           <v-col cols="12" md="8">
             <v-card>
-              <v-table
-                striped="even" fixed-header
-              >
+               <div style="overflow-x: auto;">
+              <v-table fixed-header height="500">
                 <thead>
                   <tr>
-                    <th
-                      v-for="header in activeTable.headers"
-                      :key="header.key"
-                      class="text-left font-weight-medium"
-                    >
-                      {{ header.title }}
+                    <th v-for="h in headers" :key="h.key" style="white-space: nowrap;">
+                      {{ h.title }}
                     </th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  <tr
-                    v-for="(row, index) in activeTable.rows"
-                    :key="index"
-                  >
-                    <td
-                      v-for="header in activeTable.headers"
-                      :key="header.key"
-                    >
-                      {{ row[header.key] ?? "-" }}
+                  <tr v-for="(row, i) in rows" :key="i">
+                    <td v-for="h in headers" :key="h.key">
+                      {{ row[h.key] }}
+                    </td>
+                  </tr>
+
+                  <tr v-if="!rows.length">
+                    <td :colspan="headers.length" class="text-center">
+                      暂无数据
                     </td>
                   </tr>
                 </tbody>
               </v-table>
+              </div>
             </v-card>
           </v-col>
-
         </v-row>
       </v-card-text>
-
     </v-card>
   </v-dialog>
 </template>
 
 <script setup>
-import { ref, computed } from "vue"
+import { ref, computed,watch } from "vue";
+import { useGroupPullStore } from "@/stores/group.store";
+import { useNotify } from "@/composables/useNotifiy";
+import { getPlayerDetailsQuery } from "@/api/data.api";
 
 /* dialog */
-const model = defineModel()
+const model = defineModel();
 
 /* filters */
-const date = ref(null)
-const dateMenu = ref(false)
+const date = ref(new Date());
+const dateMenu = ref(false);
 
-const shoes = [1, 2, 3, 4, 5]
-const rounds = [20, 21, 22, 23, 24]
+const form = ref({
+  shoe: null,
+  round: null,
+});
 
-const shoe = ref(1)
-const round = ref(23)
+const resetForm = () => {
+  form.value.shoe = null;
+  form.value.round = null;
+  rows.value = [];
+};
 
-/* table state */
-const activeType = ref("result")
+const notify = useNotify();
 
-/* mock data (replace with API later) */
-const tables = {
-  summary: {
-    headers: [
-      { title: "项目", key: "label" },
-      { title: "金额", key: "amount" },
-    ],
-    rows: [
-      { label: "总盈亏", amount: 159 },
-      { label: "总洗码", amount: 237 },
-    ],
-  },
+const groupStore = useGroupPullStore();
+const loading = ref(false);
+const rows = ref([]);
 
-  result: {
-    headers: [
-      { title: "名称", key: "name" },
-      { title: "热量", key: "calories" },
-      { title: "编号", key: "code" },
-    ],
-    rows: [
-      { name: "Frozen Yogurt", calories: 159, code: 1001 },
-      { name: "Ice cream sandwich", calories: 237, code: 1002 },
-      { name: "Eclair", calories: 262, code: 1003 },
-    ],
-  },
-}
+/* format date */
+const formatDate = (value) => {
+  if (!value) return "";
 
-const activeTable = computed(() => tables[activeType.value])
+  const d = new Date(value);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
 
-const changeTable = (type) => {
-  activeType.value = type
-}
+  return `${year}-${month}-${day}`;
+};
+
+const formattedDate = computed(() => formatDate(date.value));
+const groupNickName = computed(
+  () => groupStore.setting?.group_nickname ?? null,
+);
+
+const headers = computed(() => [
+  { title: "庄下注", key: "z" },
+  { title: "闲下注", key: "x" },
+  { title: "庄对下注", key: "zd" },
+  { title: "闲对下注", key: "xd" },
+  { title: "和下注", key: "h" },
+  { title: "完美下注", key: "m" },
+  { title: "幸运6下注", key: "l" },
+  { title: "对子下注", key: "d" },
+  { title: "庄闲洗码", key: "xml_zx" },
+  { title: "三宝洗码", key: "xml_sb" },
+  { title: "庄闲盈亏", key: "zx_yl" },
+  { title: "三宝盈亏", key: "sb_yl" },
+  { title: "有效流水", key: "yxxz" },
+]);
+
+watch(model, (val) => {
+  if (!val) {
+    resetForm();
+  }
+});
+
+const getDetails = async () => {
+  if (!groupNickName.value) return;
+
+  if (!formattedDate.value) {
+    notify.error("请选择日期");
+    return;
+  }
+
+  if (!form.value.shoe || !form.value.round) {
+    notify.error("请输入靴号和局号");
+    return;
+  }
+
+  loading.value = true;
+
+  try {
+    const res = await getPlayerDetailsQuery({
+      group_nickname: groupNickName.value,
+      shoe: Number(form.value.shoe),
+      round: Number(form.value.round),
+      date: formattedDate.value,
+    });
+
+    if (res?.code !== 200) {
+      notify.error(res?.msg ?? "查询失败");
+      return;
+    }
+    rows.value = (res.data || []).map(mapScoreRow);
+    notify.success(res.msg);
+  } catch (err) {
+    notify.error("获取点数统计失败");
+    console.error(err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const mapScoreRow = (r) => ({
+  z: r.z ?? 0,
+  x: r.x ?? 0,
+  zd: r.zd ?? 0,
+  xd: r.xd ?? 0,
+  h: r.h ?? 0,
+  m: r.m ?? 0,
+  l: r.l ?? 0,
+  d: r.d ?? 0,
+  xml_zx:r.xml_zx ?? 0,
+  xml_sb:r.xml_sb ?? 0,
+  zx_yl:r.zx_yl ?? 0,
+  sb_yl:r.sb_yl ?? 0,
+  yxxz:r.yxxz ?? 0,
+
+});
 </script>

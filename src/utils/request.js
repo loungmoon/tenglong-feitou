@@ -55,7 +55,8 @@ api.interceptors.response.use(
     const notify = useNotify();
 
     if (error.code === "ECONNABORTED") {
-      notify.error("请求超时，请稍后重试");
+      // notify.error("请求超时，请稍后重试");
+      console.error("请求超时，请稍后重试")
     } else if (!error.response) {
       notify.error("网络异常，请检查网络连接");
     } else {
