@@ -103,6 +103,20 @@
               </v-list>
             </v-sheet>
 
+            <div
+              v-if="selectedName && scoreMap[selectedName]"
+              class="mt-2 text-primary"
+            >
+              <div class="d-flex justify-end">
+                <strong>{{ selectedName }}</strong>
+              </div>
+
+              <div class="d-flex justify-center gap-4">
+                <span>剩余分: {{ scoreMap[selectedName].score }}</span> |
+                <span>初始分: {{ scoreMap[selectedName].raw_score }}</span>
+              </div>
+            </div>
+
             <!-- Virtual -->
             <v-row>
               <v-col cols="5"> </v-col>
@@ -216,6 +230,7 @@
 import { ref, computed, watch } from "vue";
 import { usePlayerStore } from "@/stores/player.store";
 import { useGroupPullStore } from "@/stores/group.store";
+import { useUiStore } from "@/stores/ui.store";
 import {
   queryPlayerDetails,
   queryPlayerDetailsByNameShoe,
@@ -227,6 +242,7 @@ const notify = useNotify();
 
 const playerStore = usePlayerStore();
 const groupStore = useGroupPullStore();
+const uiStore = useUiStore();
 
 const rows = ref([]);
 const tableMode = ref("normal");
@@ -322,6 +338,7 @@ const headersMap = {
 
 const headers = computed(() => headersMap[tableMode.value]);
 
+const scoreMap = computed(() => uiStore.scoreMap);
 const isSelected = (name) => selectedName.value === name;
 
 // const selectPlayer = (name) => {
@@ -342,7 +359,6 @@ const reloadPlayers = async () => {
   await playerStore.fetchPlayers();
   playerStore.selected = null;
 };
-
 
 const basePayload = () => ({
   group_nickname: groupNickName.value,

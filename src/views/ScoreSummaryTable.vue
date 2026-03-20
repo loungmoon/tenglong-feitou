@@ -142,7 +142,7 @@ const fetchScoreData = async () => {
 
     rows.push({ name: "合计", ...totals });
 
-    // uiStore.setTotals(totals);
+    uiStore.setScores(rows);
 
     updateItemsSmoothly(rows);
     firstLoad.value = false;

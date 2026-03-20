@@ -92,6 +92,20 @@
               </v-list>
             </v-sheet>
 
+             <div
+              v-if="selectedName && scoreMap[selectedName]"
+              class="mt-2 text-primary"
+            >
+              <div class="d-flex justify-end">
+                <strong>{{ selectedName }}</strong>
+              </div>
+
+              <div class="d-flex justify-center gap-4 mt-4">
+                <span>剩余分: {{ scoreMap[selectedName].score }}</span> |
+                <span>初始分: {{ scoreMap[selectedName].raw_score }}</span>
+              </div>
+            </div>
+
             <v-btn
               block
               color="#d17b4d"
@@ -157,12 +171,14 @@ import { usePlayerStore } from "@/stores/player.store";
 import { useGroupPullStore } from "@/stores/group.store";
 import { getBetDetailsByName } from "@/api/data.api";
 import { useNotify } from "@/composables/useNotifiy";
+import { useUiStore } from "@/stores/ui.store";
 
 const model = defineModel({ type: Boolean });
 const notify = useNotify();
 
 const playerStore = usePlayerStore();
 const groupStore = useGroupPullStore();
+const uiStore = useUiStore();
 
 const startMenu = ref(false);
 const endMenu = ref(false);
@@ -177,6 +193,9 @@ const loading = ref(false);
 const rows = ref([]);
 
 const groupNickName = computed(() => groupStore.setting.group_nickname);
+
+const selectedName = computed(() => playerStore.selected?.playername || "");
+const scoreMap = computed(() => uiStore.scoreMap);
 
 const formatDate = (date) => {
   const d = new Date(date);
@@ -220,7 +239,7 @@ const canQuery = computed(
     !!form.value.endTime,
 );
 
-const isSelected = (name) => playerStore.selected?.playername === name;
+const isSelected = (name) => selectedName.value === name;
 
 const selectPlayer = (name) => {
   playerStore.setSelectedByName(name);
