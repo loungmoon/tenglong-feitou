@@ -23,3 +23,11 @@ return api.post(`/data_query/get_remaining_score_summary`,data);
 export const getPlayerDetailsQuery = (data) => {
 return api.post(`/data_query/player_details_query_by_round`,data);
 }
+
+export const getBetDetailsByName =(data) => {
+return api.post(`/data_query/bet_details_query_by_name`,data);
+}
+
+export const getStatisticSBPercentage = (data) => {
+  return api.post(`/data_query/statistics_sb_percentage_by_shoe`,data)
+}

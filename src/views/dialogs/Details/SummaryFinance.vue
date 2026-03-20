@@ -6,7 +6,7 @@
       >
         <div class="d-flex align-center">
           <v-icon class="mr-2" color="primary">mdi-chart-box</v-icon>
-          <span class="font-weight-bold">场次可以改成靴</span>
+          <span class="font-weight-bold">选手数据查询及统计</span>
         </div>
         <v-btn icon variant="text" @click="close">
           <v-icon>mdi-close</v-icon>
@@ -103,90 +103,81 @@
               </v-list>
             </v-sheet>
 
-            <!-- Shoe / Round -->
-            <v-row dense class="mt-4" align="center">
-              <span>第</span>
-              <v-text-field
-                v-model="form.shoe"
-                type="number"
-                density="compact"
-                style="width: 80px"
-                clearable
-              />
-              <span class="mx-1">靴</span>
-              <v-text-field
-                v-model="form.round"
-                type="number"
-                density="compact"
-                style="width: 80px"
-                clearable
-              />
-              <span>局</span>
+            <!-- Virtual -->
+            <v-row>
+              <v-col cols="5"> </v-col>
+              <v-col cols="7">
+                <v-checkbox
+                  class="mt-3"
+                  v-model="form.is_contains_virtual"
+                  :true-value="1"
+                  :false-value="0"
+                  label="包含虚拟"
+                  density="compact"
+                />
+                <v-btn
+                  block
+                  color="#d17b4d"
+                  class="mt-2"
+                  :disabled="!canQuerySingle"
+                  @click="querySingle"
+                >
+                  按天查询单个选手明细
+                </v-btn>
+
+                <v-btn
+                  block
+                  color="#d17b4d"
+                  class="mt-2"
+                  :disabled="!canQueryAll"
+                  @click="queryAll"
+                >
+                  按天查询所有选手明细
+                </v-btn>
+
+                <v-btn
+                  block
+                  color="#d17b4d"
+                  class="mt-2"
+                  :disabled="!canQueryByNameShoeRound"
+                  @click="queryByNameShoeRound"
+                >
+                  按天按靴查询单个选手明细
+                </v-btn>
+              </v-col>
             </v-row>
 
-            <!-- Virtual -->
-            <v-checkbox
-              class="mt-3"
-              v-model="form.is_contains_virtual"
-              :true-value="1"
-              :false-value="0"
-              label="包含虚拟"
-              density="compact"
-            />
+            <v-row align="center">
+              <!-- LEFT: input -->
+              <v-col cols="5">
+                <div class="d-flex align-center">
+                  <span class="mr-2">第</span>
 
-            <!-- Query button -->
-            <!-- <v-btn
-              block
-              color="#d17b4d"
-              class="mt-2"
-              :disabled="!queryMode"
-              @click="query"
-            >
-              {{queryLabel}}
-            </v-btn> -->
+                  <v-text-field
+                    v-model="form.shoe"
+                    type="number"
+                    density="compact"
+                    hide-details
+                    style="max-width: 80px"
+                    class="mr-2"
+                  />
 
-            <!-- 单个选手 -->
-            <v-btn
-              block
-              color="#d17b4d"
-              class="mt-2"
-              :disabled="!canQuerySingle"
-              @click="querySingle"
-            >
-              按天查询单个选手明细
-            </v-btn>
+                  <span>靴</span>
+                </div>
+              </v-col>
 
-            <!-- 所有选手 -->
-            <v-btn
-              block
-              color="#d17b4d"
-              class="mt-2"
-              :disabled="!canQueryAll"
-              @click="queryAll"
-            >
-              按天查询所有选手明细
-            </v-btn>
-
-            <v-btn
-              block
-              color="#d17b4d"
-              class="mt-2"
-              :disabled="!canQueryByNameShoeRound"
-              @click="queryByNameShoeRound"
-            >
-              按天按靴查询单个选手明细
-            </v-btn>
-
-            <!-- 某靴所有选手 -->
-            <v-btn
-              block
-              color="#d17b4d"
-              class="mt-2"
-              :disabled="!canQueryByShoe"
-              @click="queryByShoe"
-            >
-              按天查某靴所有选手汇总
-            </v-btn>
+              <!-- RIGHT: button -->
+              <v-col cols="7">
+                <v-btn
+                  block
+                  color="#d17b4d"
+                  :disabled="!canQueryByShoe"
+                  @click="queryByShoe"
+                >
+                  按天查某靴所有选手汇总
+                </v-btn>
+              </v-col>
+            </v-row>
           </v-col>
 
           <!-- ========== RIGHT PANEL ========== -->
@@ -282,8 +273,7 @@ const hasDateRange = computed(
 const canQueryByNameShoeRound = computed(() => {
   return (
     selectedName.value &&
-    form.value.shoe &&
-    form.value.round &&
+    !form.value.shoe &&
     form.value.startTime &&
     form.value.endTime
   );
@@ -301,11 +291,10 @@ const canQueryByShoe = computed(() => {
   return (
     hasDateRange.value &&
     form.value.shoe &&
-    form.value.round &&
+    // form.value.round &&
     !selectedName.value
   );
 });
-
 
 const headersMap = {
   normal: [
@@ -314,20 +303,20 @@ const headersMap = {
     { title: "三宝盈利", key: "sb_yl" },
     { title: "三宝洗码量", key: "xml_sb" },
     { title: "闲庄洗码量", key: "xml_zx" },
-    // { title: "有效下注", key: "yxxz" },
     { title: "闲庄盈利", key: "zx_yl" },
+    { title: "有效下注", key: "yxxz" },
   ],
   byNameShoe: [
     { title: "选手", key: "username" },
     { title: "靴", key: "cc" },
     { title: "参考名称", key: "reference_name" },
-    // { title: "三宝盈利", key: "sb_yl" },
-    { title: "三宝下注", key: "sb_xz" },
+    { title: "三宝盈利", key: "sb_yl" },
+    // { title: "三宝下注", key: "sb_xz" },
     { title: "三宝洗码量", key: "xml_sb" },
     { title: "闲庄洗码量", key: "xml_sx" },
     { title: "闲庄下注", key: "xz_xz" },
     { title: "闲庄盈利", key: "xz_yl" },
-    // { title: "有效下注", key: "yxxz" },
+    { title: "有效下注", key: "yxxz" },
   ],
 };
 
@@ -335,8 +324,18 @@ const headers = computed(() => headersMap[tableMode.value]);
 
 const isSelected = (name) => selectedName.value === name;
 
+// const selectPlayer = (name) => {
+//   playerStore.setSelectedByName(name);
+// };
+
 const selectPlayer = (name) => {
-  playerStore.setSelectedByName(name);
+  if (selectedName.value === name) {
+    // Already selected → unselect
+    playerStore.selected = null;
+  } else {
+    // Otherwise, select
+    playerStore.setSelectedByName(name);
+  }
 };
 
 const reloadPlayers = async () => {
@@ -344,13 +343,13 @@ const reloadPlayers = async () => {
   playerStore.selected = null;
 };
 
+
 const basePayload = () => ({
   group_nickname: groupNickName.value,
   startTime: form.value.startTime,
   endTime: form.value.endTime,
   is_contains_virtual: form.value.is_contains_virtual,
 });
-
 
 const querySingle = async () => {
   tableMode.value = "normal";
@@ -390,8 +389,8 @@ const queryByShoe = async () => {
   try {
     const res = await queryPlayerDetails({
       ...basePayload(),
-      shoe: form.value.shoe,
-      round: form.value.round,
+      shoe: Number(form.value.shoe),
+      // round: form.value.round,
     });
 
     rows.value = res.data || [];
@@ -414,8 +413,6 @@ const queryByNameShoeRound = async () => {
     const res = await queryPlayerDetailsByNameShoe({
       ...basePayload(),
       name: selectedName.value,
-      shoe: form.value.shoe,
-      round: form.value.round,
     });
 
     rows.value = res.data || [];

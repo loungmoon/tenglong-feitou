@@ -63,8 +63,8 @@
               </v-row>
 
               <!-- Buttons -->
-              <v-btn block color="warning" class="mt-4" @click="getDetails">
-                查询下注选手明细
+              <v-btn block color="#d17b4d" class="mt-4" @click="getDetails">
+                查询某天某靴某局所有下注选手明细
               </v-btn>
             </v-card>
           </v-col>
@@ -153,14 +153,14 @@ const groupNickName = computed(
 );
 
 const headers = computed(() => [
-  { title: "庄下注", key: "z" },
-  { title: "闲下注", key: "x" },
-  { title: "庄对下注", key: "zd" },
-  { title: "闲对下注", key: "xd" },
-  { title: "和下注", key: "h" },
-  { title: "完美下注", key: "m" },
-  { title: "幸运6下注", key: "l" },
-  { title: "对子下注", key: "d" },
+  { title: "闲", key: "x" },
+  { title: "庄", key: "z" },
+  { title: "闲对", key: "xd" },
+  { title: "庄对", key: "zd" },
+  { title: "和", key: "h" },
+  { title: "幸运6", key: "l" },
+  { title: "完美", key: "m" },
+  { title: "任意", key: "d" },
   { title: "庄闲洗码", key: "xml_zx" },
   { title: "三宝洗码", key: "xml_sb" },
   { title: "庄闲盈亏", key: "zx_yl" },
