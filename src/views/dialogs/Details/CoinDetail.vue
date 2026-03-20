@@ -79,6 +79,7 @@
           </v-col>
 
           <v-col cols="12" md="9">
+            <div style="overflow-x: auto;">
             <v-table fixed-header height="500">
               <thead>
                 <tr>
@@ -90,7 +91,7 @@
 
               <tbody>
                 <tr v-for="(row, i) in rows" :key="i">
-                  <td v-for="h in headers" :key="h.key">
+                  <td v-for="h in headers" :key="h.key" style="white-space: nowrap;">
                     {{ row[h.key] }}
                   </td>
                 </tr>
@@ -102,6 +103,7 @@
                 </tr>
               </tbody>
             </v-table>
+            </div>
           </v-col>
         </v-row>
       </v-card-text>
