@@ -446,7 +446,7 @@ const reset = () => {
     round: null,
     startTime: "",
     endTime: "",
-    is_contains_virtual: 0,
+    is_contains_virtual: 1,
   };
   playerStore.clearSelected();
 };

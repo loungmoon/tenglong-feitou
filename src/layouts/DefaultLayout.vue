@@ -63,7 +63,7 @@ onMounted(async () => {
 watch(
   () => groupStore.setting.group_nickname,
   async (newVal, oldVal) => {
-    if (!groupStore.isReady) return;
+    // if (!groupStore.isReady) return;
     if (!newVal || newVal === oldVal) return;
 
     try {
