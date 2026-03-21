@@ -80,10 +80,10 @@
 
           <v-col cols="12" md="9">
             <div style="overflow-x: auto;">
-            <v-table fixed-header height="500">
+            <v-table fixed-header height="600">
               <thead>
                 <tr>
-                  <th v-for="h in headers" :key="h.key">
+                  <th v-for="h in headers" :key="h.key" style="white-space: nowrap;">
                     {{ h.title }}
                   </th>
                 </tr>
@@ -91,7 +91,7 @@
 
               <tbody>
                 <tr v-for="(row, i) in rows" :key="i">
-                  <td v-for="h in headers" :key="h.key" style="white-space: nowrap;">
+                  <td v-for="h in headers" :key="h.key" >
                     {{ row[h.key] }}
                   </td>
                 </tr>
@@ -145,9 +145,9 @@ const headersMap = {
     { title: "和", key: "xml_sb" },
     { title: "完美", key: "xml_zx" },
     { title: "任意", key: "zx_yl" },
-    { title: "三宝幸运6对应总投注", key: "yxxz" },
-    { title: "开奖结果", key: "zx_yl" },
-    { title: "选手总赢亏", key: "yxxz" },
+    { title: "三宝幸运6对应总投注", key: "yxz" },
+    { title: "开奖结果", key: "zx_l" },
+    { title: "选手总赢亏", key: "yxzh" },
     { title: "公司总利润", key: "yxxz" },
   ],
   normal: [
@@ -157,7 +157,7 @@ const headersMap = {
     { title: "幸运6总投注分", key: "sb_yl" },
     { title: "幸运6选手赢亏总分", key: "sb_xz" },
     { title: "完美对子投注分", key: "xml_sb" },
-    { title: "完美对子选手赢亏总分", key: "xml_sb" },
+    { title: "完美对子选手赢亏总分", key: "xml_s1" },
     { title: "任意对子总投注分", key: "xml_sx" },
     { title: "任意对子选手赢亏总分", key: "xz_xz" },
     { title: "公司利润总分", key: "xz_yl" },

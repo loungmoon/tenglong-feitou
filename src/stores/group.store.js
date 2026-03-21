@@ -1,8 +1,10 @@
 //stores/group.store.js
 import { defineStore } from "pinia";
 import { getGroupPullDataApi, setGroupPullDataApi } from "@/api/system.api";
+import { useResultSettingStore } from "./resultsetting.store";
 
 const STORAGE_KEY = "group_nickname";
+
 
 function getCachedNickname() {
   return localStorage.getItem(STORAGE_KEY) || "";
@@ -102,48 +104,14 @@ export const useGroupPullStore = defineStore("group", {
         };
 
         setCachedNickname(form.group_nickname);
+        const resultstore = useResultSettingStore();
+        await resultstore.getDeskInfo();
         this.isFetched = true;
+
       } finally {
         this.loading = false;
       }
     },
-
-//     async saveSetting(form) {
-//   this.loading = true;
-
-//   try {
-//     const payload = {};
-//     for (const [k, v] of Object.entries(form)) {
-//       payload[k] = typeof v === "boolean" ? (v ? 1 : 0) : v;
-//     }
-
-//     await setGroupPullDataApi(payload);
-
-//     const oldNickname = this.setting.group_nickname;
-
-//     this.setting = {
-//       ...this.setting,
-//       ...form,
-//     };
-
-//     setCachedNickname(form.group_nickname);
-//     this.isFetched = true;
-
-//     // trigger side effects here if nickname changed
-//     if (form.group_nickname !== oldNickname) {
-//       const resultstore = useResultSettingStore();
-//       const playerStore = usePlayerStore();
-
-//       resultstore.reset();
-//       playerStore.reset();
-
-//       await resultstore.getDeskInfo();
-//       await playerStore.fetchPlayers(true);
-//     }
-//   } finally {
-//     this.loading = false;
-//   }
-// }
 
     async reload() {
       this.isFetched = false;
