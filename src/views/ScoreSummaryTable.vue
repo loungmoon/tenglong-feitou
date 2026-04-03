@@ -62,14 +62,27 @@ const groupNickName = computed(() => grpupStore.setting.group_nickname);
 const shoe = computed(() => resultStore.info.shoe);
 const round = computed(() => resultStore.info.round);
 
-const headers = [
-  { title: "姓名", key: "name", align: "center" },
+// const headers = [
+//   {title: `${shoe.value ?? ""} - ${round.value ?? ""}`, key: "name", align: "center" },
+//   { title: "本局得分", key: "yl", align: "center" },
+//   { title: "剩余分", key: "score", align: "center" },
+//   { title: "初始分", key: "raw_score", align: "center" },
+//   { title: "日积分", key: "daily_points", align: "center" },
+//   { title: "总积分", key: "total_points", align: "center" },
+// ];
+
+const headers = computed(() => [
+  { 
+    title: `${shoe.value ?? ""} 靴 ${round.value ?? ""}局`, // always show shoe and round
+    key: "name",
+    align: "center" 
+  },
   { title: "本局得分", key: "yl", align: "center" },
   { title: "剩余分", key: "score", align: "center" },
   { title: "初始分", key: "raw_score", align: "center" },
   { title: "日积分", key: "daily_points", align: "center" },
   { title: "总积分", key: "total_points", align: "center" },
-];
+]);
 
 //(NO JUMP)
 const updateItemsSmoothly = (newRows) => {

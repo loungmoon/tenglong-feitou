@@ -1,6 +1,9 @@
 import axios from "axios";
 import router from "@/router";
 import { useNotify } from "@/composables/useNotifiy";
+import { useGroupPullStore } from "@/stores/group.store";
+import { usePlayerStore } from "@/stores/player.store";
+import { useResultSettingStore } from "@/stores/resultsetting.store";
 
 /* token helpers */
 export const getToken = () => localStorage.getItem("token");
@@ -8,7 +11,7 @@ export const setToken = (token) =>
   token && localStorage.setItem("token", token);
 export const clearToken = () => {
   localStorage.removeItem("token");
-  localStorage.removeItem("group_nickname");
+  // localStorage.removeItem("group_nickname");
 };
 
 const api = axios.create({
@@ -36,6 +39,14 @@ api.interceptors.response.use(
     if (data?.status === 401 || data?.status === 403) {
       clearToken();
 
+      const group = useGroupPullStore();
+      const player = usePlayerStore();
+      const resultsetting = useResultSettingStore();
+
+      group.$reset();
+      player.reset();
+      resultsetting.reset();
+
       if (router.currentRoute.value.path !== "/login") {
         router.replace({
           path: "/login",
@@ -56,13 +67,11 @@ api.interceptors.response.use(
 
     if (error.code === "ECONNABORTED") {
       // notify.error("请求超时，请稍后重试");
-      console.error("请求超时，请稍后重试")
+      console.error("请求超时，请稍后重试");
     } else if (!error.response) {
       notify.error("网络异常，请检查网络连接");
     } else {
-      notify.error(
-        error.response?.data?.msg || "服务器错误"
-      );
+      notify.error(error.response?.data?.msg || "服务器错误");
     }
     return Promise.reject(error);
   },

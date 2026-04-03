@@ -5,7 +5,7 @@
         <div class="d-flex align-center w-100">
           <v-icon class="mr-2">mdi-cog</v-icon>
           <span class="text-subtitle-1 font-weight-medium">
-            Baccaract Scoreboard
+            路单
           </span>
 
           <v-spacer />
