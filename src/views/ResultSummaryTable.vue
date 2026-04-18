@@ -61,18 +61,6 @@ const groupNickName = computed(()=> groupStore.setting.group_nickname)
 const shoe = computed(() => resultStore.info.shoe);
 const round = computed(() => resultStore.info.round);
 
-// const headers = [
-//   { title: "姓名", key: "name", width: 90 },
-//   { title: "闲", key: "player", align: "center" },
-//   { title: "庄", key: "bank", align: "center" },
-//   { title: "闲对", key: "playerPair", align: "center" },
-//   { title: "庄对", key: "bankPair", align: "center" },
-//   { title: "和", key: "tie", align: "center" },
-//   { title: "幸运6", key: "lucky6", align: "center" },
-//   { title: "完美", key: "perfect", align: "center" },
-// ];
-
-
 const headers = computed(() => [
   { 
     title: `${shoe.value ?? ""} 靴 ${round.value ?? ""}局`, // always show shoe and round
@@ -99,10 +87,24 @@ const emptyTotals = () => ({
 });
 
 //(NO JUMP)
+// const updateItemsSmoothly = (newRows) => {
+//   if (items.value.length === 0) {
+//     items.value = newRows;
+//     return;
+//   }
+
+//   newRows.forEach((newRow, index) => {
+//     if (!items.value[index]) {
+//       items.value[index] = newRow;
+//     } else {
+//       Object.assign(items.value[index], newRow);
+//     }
+//   });
+// };
 const updateItemsSmoothly = (newRows) => {
-  if (items.value.length === 0) {
-    items.value = newRows;
-    return;
+  // remove extra rows
+  if (items.value.length > newRows.length) {
+    items.value.splice(newRows.length);
   }
 
   newRows.forEach((newRow, index) => {

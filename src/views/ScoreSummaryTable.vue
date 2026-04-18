@@ -85,10 +85,25 @@ const headers = computed(() => [
 ]);
 
 //(NO JUMP)
+// const updateItemsSmoothly = (newRows) => {
+//   if (items.value.length === 0) {
+//     items.value = newRows;
+//     return;
+//   }
+
+//   newRows.forEach((newRow, index) => {
+//     if (!items.value[index]) {
+//       items.value[index] = newRow;
+//     } else {
+//       Object.assign(items.value[index], newRow);
+//     }
+//   });
+// };
+
 const updateItemsSmoothly = (newRows) => {
-  if (items.value.length === 0) {
-    items.value = newRows;
-    return;
+  // remove extra rows
+  if (items.value.length > newRows.length) {
+    items.value.splice(newRows.length);
   }
 
   newRows.forEach((newRow, index) => {
