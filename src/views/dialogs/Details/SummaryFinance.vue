@@ -278,36 +278,6 @@ const onEndDateSelect = (val) => {
   endMenu.value = false;
 };
 
-const hasDateRange = computed(
-  () => !!form.value.startTime && !!form.value.endTime,
-);
-
-const canQueryByNameShoeRound = computed(() => {
-  return (
-    selectedName.value &&
-    !form.value.shoe &&
-    form.value.startTime &&
-    form.value.endTime
-  );
-});
-
-const canQuerySingle = computed(() => {
-  return hasDateRange.value && selectedName.value && !form.value.shoe;
-});
-
-const canQueryAll = computed(() => {
-  return hasDateRange.value && !selectedName.value && !form.value.shoe;
-});
-
-const canQueryByShoe = computed(() => {
-  return (
-    hasDateRange.value &&
-    form.value.shoe &&
-    // form.value.round &&
-    !selectedName.value
-  );
-});
-
 const headersMap = {
   normal: [
     { title: "选手", key: "username" },
@@ -412,20 +382,6 @@ const querySingle = async () => {
   }
 };
 
-// const queryAll = async () => {
-//   tableMode.value = "normal";
-//   rows.value = [];
-
-//   try {
-//     const res = await queryPlayerDetails(basePayload());
-
-//     rows.value = res.data || [];
-//     notify.success(res.msg);
-//   } catch (err) {
-//     notify.error("查询失败");
-//   }
-// };
-
 const queryAll = async () => {
   if (!form.value.startTime || !form.value.endTime) {
     notify.error("请选择开始和结束日期");
@@ -454,24 +410,6 @@ const queryAll = async () => {
     notify.error("查询失败");
   }
 };
-
-// const queryByShoe = async () => {
-//   tableMode.value = "normal";
-//   rows.value = [];
-
-//   try {
-//     const res = await queryPlayerDetails({
-//       ...basePayload(),
-//       shoe: Number(form.value.shoe),
-//       // round: form.value.round,
-//     });
-
-//     rows.value = res.data || [];
-//     notify.success(res.msg);
-//   } catch (err) {
-//     notify.error("查询失败");
-//   }
-// };
 
 const queryByShoe = async () => {
   if (!form.value.startTime || !form.value.endTime) {
@@ -504,29 +442,6 @@ const queryByShoe = async () => {
     notify.error("查询失败");
   }
 };
-
-// const queryByNameShoeRound = async () => {
-//   if (!canQueryByNameShoeRound.value) {
-//     notify.error("请完整选择日期、选手、靴号和局号");
-//     return;
-//   }
-
-//   rows.value = [];
-//   tableMode.value = "byNameShoe";
-
-//   try {
-//     const res = await queryPlayerDetailsByNameShoe({
-//       ...basePayload(),
-//       name: selectedName.value,
-//     });
-
-//     rows.value = res.data || [];
-//     notify.success(res.msg);
-//   } catch (err) {
-//     console.error(err);
-//     notify.error("查询失败");
-//   }
-// };
 
 const queryByNameShoeRound = async () => {
   if (!form.value.startTime || !form.value.endTime) {
