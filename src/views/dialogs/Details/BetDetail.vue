@@ -216,6 +216,31 @@ const onEndDateSelect = (val) => {
   endMenu.value = false;
 };
 
+const formatResult = (value) => {
+  if (!value) return "";
+
+  const parts = [];
+
+  // 🟡 Main result
+  if (value & 4) parts.push("和");
+  else if (value & 1) parts.push("庄");
+  else if (value & 2) parts.push("闲");
+
+  // 🟢 Pair
+  if (value & 8) parts.push("庄对");
+  if (value & 16) parts.push("闲对");
+  if (value & 256) parts.push("任意对子");
+
+  // 🔵 Lucky6
+  if (value & 32) parts.push("幸运6(2张)");
+  if (value & 64) parts.push("幸运6(3张)");
+
+  // 🟣 Perfect Pair
+  if (value & 128) parts.push("完美对子");
+
+  return parts.join("-");
+};
+
 const headers = computed(() => [
   { title: "会员昵称", key: "nickname" },
   { title: "鞋局", key: "shoe" },
@@ -223,9 +248,9 @@ const headers = computed(() => [
   { title: "下注输赢", key: "raw_money" },
   { title: "下注命令", key: "bet_order" },
   { title: "命令格式", key: "bet_format" },
-  { title: "下注时间", key: "bet_time", width: "120px" },
+  { title: "下注时间", key: "bet_time" ,width: "170px"},
   { title: "开奖结果", key: "result" },
-  { title: "开奖时间", key: "result_time", width: "120px" },
+  { title: "开奖时间", key: "result_time", width: "170px" },
   { title: "结算状态", key: "result_status" },
   { title: "原始字符串", key: "result_rawstring" },
   { title: "下注前金额", key: "before_bet_money" },
@@ -303,7 +328,8 @@ const mapBetRow = (r) => ({
   bet_format: r.bet_format ?? 0,
   bet_order: r.bet_order ?? 0,
   raw_money: r.raw_money ?? 0,
-  result: r.result ?? 0,
+  // result: r.result ?? 0,
+  result: formatResult(r.result),
   result_rawstring: r.result_rawstring ?? 0,
   result_status: r.result_status ?? 0,
   shoe: r.shoe ?? 0,

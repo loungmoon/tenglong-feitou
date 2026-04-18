@@ -133,7 +133,6 @@
                   block
                   color="#d17b4d"
                   class="mt-2"
-                  :disabled="!canQuerySingle"
                   @click="querySingle"
                 >
                   按天查询单个选手明细
@@ -143,7 +142,6 @@
                   block
                   color="#d17b4d"
                   class="mt-2"
-                  :disabled="!canQueryAll"
                   @click="queryAll"
                 >
                   按天查询所有选手明细
@@ -153,7 +151,6 @@
                   block
                   color="#d17b4d"
                   class="mt-2"
-                  :disabled="!canQueryByNameShoeRound"
                   @click="queryByNameShoeRound"
                 >
                   按天按靴查询单个选手明细
@@ -185,7 +182,6 @@
                 <v-btn
                   block
                   color="#d17b4d"
-                  :disabled="!canQueryByShoe"
                   @click="queryByShoe"
                 >
                   按天查某靴所有选手汇总
@@ -367,7 +363,39 @@ const basePayload = () => ({
   is_contains_virtual: form.value.is_contains_virtual,
 });
 
+// const querySingle = async () => {
+//   tableMode.value = "normal";
+//   rows.value = [];
+
+//   try {
+//     const res = await queryPlayerDetails({
+//       ...basePayload(),
+//       name: selectedName.value,
+//     });
+
+//     rows.value = res.data || [];
+//     notify.success(res.msg);
+//   } catch (err) {
+//     notify.error("查询失败");
+//   }
+// };
+
 const querySingle = async () => {
+  if (!form.value.startTime || !form.value.endTime) {
+    notify.error("请选择开始和结束日期");
+    return;
+  }
+
+  if (!selectedName.value) {
+    notify.error("请选择选手");
+    return;
+  }
+
+  if (form.value.shoe) {
+    notify.error("单个选手查询不需要填写靴号");
+    return;
+  }
+
   tableMode.value = "normal";
   rows.value = [];
 
@@ -384,7 +412,36 @@ const querySingle = async () => {
   }
 };
 
+// const queryAll = async () => {
+//   tableMode.value = "normal";
+//   rows.value = [];
+
+//   try {
+//     const res = await queryPlayerDetails(basePayload());
+
+//     rows.value = res.data || [];
+//     notify.success(res.msg);
+//   } catch (err) {
+//     notify.error("查询失败");
+//   }
+// };
+
 const queryAll = async () => {
+  if (!form.value.startTime || !form.value.endTime) {
+    notify.error("请选择开始和结束日期");
+    return;
+  }
+
+  if (selectedName.value) {
+    notify.error("查询全部时不要选择选手");
+    return;
+  }
+
+  if (form.value.shoe) {
+    notify.error("查询全部时不要填写靴号");
+    return;
+  }
+
   tableMode.value = "normal";
   rows.value = [];
 
@@ -398,7 +455,40 @@ const queryAll = async () => {
   }
 };
 
+// const queryByShoe = async () => {
+//   tableMode.value = "normal";
+//   rows.value = [];
+
+//   try {
+//     const res = await queryPlayerDetails({
+//       ...basePayload(),
+//       shoe: Number(form.value.shoe),
+//       // round: form.value.round,
+//     });
+
+//     rows.value = res.data || [];
+//     notify.success(res.msg);
+//   } catch (err) {
+//     notify.error("查询失败");
+//   }
+// };
+
 const queryByShoe = async () => {
+  if (!form.value.startTime || !form.value.endTime) {
+    notify.error("请选择开始和结束日期");
+    return;
+  }
+
+  if (!form.value.shoe) {
+    notify.error("请输入靴号");
+    return;
+  }
+
+  if (selectedName.value) {
+    notify.error("按靴查询时不要选择选手");
+    return;
+  }
+
   tableMode.value = "normal";
   rows.value = [];
 
@@ -406,7 +496,6 @@ const queryByShoe = async () => {
     const res = await queryPlayerDetails({
       ...basePayload(),
       shoe: Number(form.value.shoe),
-      // round: form.value.round,
     });
 
     rows.value = res.data || [];
@@ -416,9 +505,42 @@ const queryByShoe = async () => {
   }
 };
 
+// const queryByNameShoeRound = async () => {
+//   if (!canQueryByNameShoeRound.value) {
+//     notify.error("请完整选择日期、选手、靴号和局号");
+//     return;
+//   }
+
+//   rows.value = [];
+//   tableMode.value = "byNameShoe";
+
+//   try {
+//     const res = await queryPlayerDetailsByNameShoe({
+//       ...basePayload(),
+//       name: selectedName.value,
+//     });
+
+//     rows.value = res.data || [];
+//     notify.success(res.msg);
+//   } catch (err) {
+//     console.error(err);
+//     notify.error("查询失败");
+//   }
+// };
+
 const queryByNameShoeRound = async () => {
-  if (!canQueryByNameShoeRound.value) {
-    notify.error("请完整选择日期、选手、靴号和局号");
+  if (!form.value.startTime || !form.value.endTime) {
+    notify.error("请选择开始和结束日期");
+    return;
+  }
+
+  if (!selectedName.value) {
+    notify.error("请选择选手");
+    return;
+  }
+
+  if (form.value.shoe) {
+    notify.error("该查询不需要靴号");
     return;
   }
 
@@ -434,7 +556,6 @@ const queryByNameShoeRound = async () => {
     rows.value = res.data || [];
     notify.success(res.msg);
   } catch (err) {
-    console.error(err);
     notify.error("查询失败");
   }
 };

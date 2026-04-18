@@ -139,16 +139,17 @@ const groupNickName = computed(() => groupStore.setting.group_nickname);
 
 const headersMap = {
   ByShoe: [
-    { title: "靴", key: "username" },
-    { title: "闲对", key: "reference_name" },
-    { title: "庄对", key: "sb_yl" },
-    { title: "和", key: "xml_sb" },
-    { title: "完美", key: "xml_zx" },
-    { title: "任意", key: "zx_yl" },
-    { title: "三宝幸运6对应总投注", key: "yxz" },
-    { title: "开奖结果", key: "zx_l" },
-    { title: "选手总赢亏", key: "yxzh" },
-    { title: "公司总利润", key: "yxxz" },
+    { title: "靴", key: "shoe" },
+    { title: "闲对", key: "g_d" },
+    { title: "庄对", key: "g_l" },
+    { title: "和", key: "g_h" },
+    { title: "幸运6",key:"kj"},
+    { title: "完美", key: "g_xd" },
+    { title: "任意", key: "g_zd" },
+    { title: "三宝幸运6对应总投注", key: "g_zd" },
+    { title: "开奖结果", key: "g_zd" },
+    { title: "选手总赢亏", key: "g_zd" },
+    { title: "公司总利润", key: "g_zd" },
   ],
   normal: [
     { title: "日期", key: "username" },
@@ -238,13 +239,15 @@ const getScoreByShoe = async () => {
 };
 
 const mapScoreRow = (r) => ({
-  daily_points: r.daily_points ?? 0,
-  fh: r.fh ?? 0,
-  raw_score: r.raw_score ?? 0,
-  score: r.score ?? 0,
-  total_points: r.total_points ?? 0,
-  xz: r.xz ?? 0,
-  yl: r.yl ?? 0,
+  shoe: r.shoe ?? 0,
+  g_d: r.g_d ?? 0,
+  g_h: r.g_h ?? 0,
+  g_l: r.g_l ?? 0,
+  g_m: r.g_m ?? 0,
+  g_xd: r.g_xd ?? 0,
+  g_zd: r.g_zd ?? 0,
+  kj:r.g_zd ?? 0,
+  round: r.round ?? 0,
 });
 
 const getData = async () => {
