@@ -5,7 +5,7 @@
         <v-col cols="4">
           <v-card variant="tonal" color="#d38054" class="text-center">
             <div class="text-caption">台面筹码</div>
-            <div class="text-h6 font-weight-bold">-20,000</div>
+            <div class="text-h6 font-weight-bold">{{ formattedChips }}</div>
           </v-card>
         </v-col>
 
@@ -23,8 +23,8 @@
       </v-row>
 
       <div class="text-center text-primary my-5">
-        <div>非虚拟剩余分汇总: {{totals.total_score}}</div>
-        <div>非虚拟初始分汇总: {{totals.total_raw_score}}</div>
+        <div>非虚拟剩余分汇总: {{ totals.total_score }}</div>
+        <div>非虚拟初始分汇总: {{ totals.total_raw_score }}</div>
       </div>
 
       <v-row class="d-flex justify-between" dense>
@@ -162,7 +162,7 @@
           />
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="4" v-if="betArea.anyPair">
           <v-checkbox
             v-model="anyPair"
             label="任意对"
@@ -171,9 +171,19 @@
             class="border border-primary rounded pa-1"
           />
         </v-col>
+        <!-- <v-col cols="4">
+           <v-checkbox 
+           v-model="anyPair" 
+           label="任意对" 
+           density="compact" 
+           class="border border-primary rounded pa-1" 
+           hide-details
+           :disabled="!betArea.anyPair" />
+        </v-col> -->
       </v-row>
       <v-row dense class="mt-2">
-        <v-col cols="4">
+
+        <v-col cols="4" v-if="betArea.lucky6">
           <v-checkbox
             v-model="lucky6_2"
             label="幸运6（2点）"
@@ -183,7 +193,7 @@
           />
         </v-col>
 
-        <v-col cols="4">
+        <v-col cols="4" v-if="betArea.lucky6">
           <v-checkbox
             v-model="lucky6_3"
             label="幸运6（3点）"
@@ -192,7 +202,8 @@
             class="border border-primary rounded pa-1"
           />
         </v-col>
-        <v-col cols="4">
+  
+        <v-col cols="4" v-if="betArea.perfect">
           <v-checkbox
             v-model="perfect"
             label="完美"
@@ -245,6 +256,7 @@ import { ref, computed, watch } from "vue";
 import { useResultSettingStore } from "@/stores/resultsetting.store";
 import { useNotify } from "@/composables/useNotifiy";
 import { drawLotteryApi } from "@/api/opt.api";
+import { getTableChips, getBetArea } from "@/api/system.api";
 import { useGroupPullStore } from "@/stores/group.store";
 import { useUiStore } from "@/stores/ui.store";
 import {
@@ -284,11 +296,24 @@ const lucky6_3 = ref(false);
 const perfect = ref(false);
 const anyPair = ref(false);
 
+const tableChips = ref(0);
+
+const betArea = ref({
+  lucky6: true,
+  perfect: true,
+  anyPair: true,
+});
+
 const hasMainResult = computed(() => !!mainResult.value);
 
 const deskNumber = computed(() => store.info.desk_number ?? null);
 const groupNickName = computed(() => groupStore.setting.group_nickname);
-const totals = computed(()=> uiStore.totals);
+const totals = computed(() => uiStore.totals);
+
+const formattedChips = computed(() =>
+  tableChips.value.toLocaleString()
+);
+
 watch(
   () => store.info,
   (info) => {
@@ -309,6 +334,17 @@ watch(mainResult, (val) => {
   }
 });
 
+watch(betArea, (val) => {
+  if (!val.anyPair) anyPair.value = false;
+
+  if (!val.lucky6) {
+    lucky6_2.value = false;
+    lucky6_3.value = false;
+  }
+
+  if (!val.perfect) perfect.value = false;
+});
+
 const resultCode = computed(() => {
   if (!mainResult.value) return 0;
   let sum = 0;
@@ -327,6 +363,12 @@ const resultCode = computed(() => {
   return sum;
 });
 
+const loadDeskAndExtras = async () => {
+  await store.getDeskInfo();   // wait this first
+  await fetchTableChips();     // then call
+  await fetchBetArea();
+};
+
 const refreshDesk = async () => {
   mainResult.value = null;
   bankerPair.value = false;
@@ -335,19 +377,74 @@ const refreshDesk = async () => {
   lucky6_3.value = false;
   perfect.value = false;
   anyPair.value = false;
-  await store.getDeskInfo();
+  // await store.getDeskInfo();
+  await loadDeskAndExtras();
 };
 
-const handleNextShoe = async () =>{
+const fetchTableChips = async () => {
+  if (!groupNickName.value) return;
+
+  try {
+    const res = await getTableChips({
+      group_nickname: groupNickName.value,
+    });
+
+    if (res.code === 200) {
+      tableChips.value = res.data.table_chips ?? 0;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const fetchBetArea = async () => {
+  if (!groupNickName.value) return;
+
+  try {
+    const res = await getBetArea({
+      group_nickname: groupNickName.value,
+    });
+
+    if (res.code === 200) {
+      betArea.value = {
+        lucky6: res.data.enable_Lucky_6 === 1,
+        perfect: res.data.enable_perfect_pairs === 1,
+        anyPair: res.data.enable_any_pairs === 1,
+      };
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+watch(
+  [groupNickName],
+  (g) => {
+    if (g) {
+      fetchTableChips();
+      fetchBetArea();
+    } else {
+      tableChips.value = 0;
+      betArea.value = {
+        lucky6: false,
+        perfect: false,
+        anyPair: false,
+      };
+    }
+  },
+  { immediate: true },
+);
+
+const handleNextShoe = async () => {
   nextRoundActive.value = false;
   resultActive.value = true;
   await refreshDesk();
-}
+};
 
 const handleNextRound = async (data) => {
   form.value.round = Number(data.round);
   form.value.shoe = Number(data.shos);
-  
+
   nextRoundActive.value = true;
   resultActive.value = false;
   await refreshDesk();
@@ -363,7 +460,7 @@ const handleEditShoe = async (data) => {
 
 /* submit */
 const submitResult = async () => {
-  if(!groupNickName.value) return;
+  if (!groupNickName.value) return;
 
   if (!form.value.shoe || !form.value.round) {
     notify.error("请输入靴号和局号");

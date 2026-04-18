@@ -457,8 +457,6 @@ const queryByShoe = async () => {
   }
 };
 
-
-
 const reset = () => {
   rows.value = [];
   form.value = {
